@@ -23,7 +23,7 @@ export default defineConfig({
     // Generate a completely static build
     target: 'es2015',
     // Minify the output
-    minify: 'terser',
+    minify: true,
     // Ensure sourcemaps are generated
     sourcemap: false
   }

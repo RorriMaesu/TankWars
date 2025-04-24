@@ -5,19 +5,21 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/TankWars/', // This is important for GitHub Pages deployment
+  server: {
+    headers: {
+      'Content-Type': 'application/javascript'
+    }
+  },
+  // Ensure proper MIME types for GitHub Pages
   build: {
     outDir: 'dist',
     rollupOptions: {
       output: {
-        entryFileNames: 'assets/[name]-[hash].js',
+        // Use consistent naming without hashes for easier fallback
+        entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
-    }
-  },
-  server: {
-    headers: {
-      'Content-Type': 'application/javascript'
     }
   }
 })

@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <base href="/TankWars/" />
     <link rel="icon" type="image/svg+xml" href="./tank-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Tank Wars - An online multiplayer tank battle game" />
@@ -32,16 +33,33 @@
     <script type="module" src="./src/main.jsx"></script>
     <!-- Fallback for GitHub Pages -->
     <script>
-      // Check if the module script failed to load
+      // This script handles module loading errors for GitHub Pages
       window.addEventListener('error', function(e) {
-        if (e.target.src && e.target.src.endsWith('main.jsx')) {
+        // Check if this is a module loading error
+        if (e.target.tagName === 'SCRIPT' && e.target.type === 'module') {
           console.log('Module script failed to load, trying fallback...');
-          // Create a new script tag with the correct path to the built JS file
-          const script = document.createElement('script');
-          script.type = 'module';
-          // Try to load the built JS file from assets directory
-          script.src = './assets/index.js';
-          document.body.appendChild(script);
+
+          // Get the base URL for the site
+          const baseUrl = document.querySelector('base')?.href || '/TankWars/';
+
+          // Try to find the correct asset path from the error
+          const failedSrc = e.target.src;
+          const assetMatch = failedSrc.match(/\/assets\/[^\/]+\.js$/);
+
+          if (assetMatch) {
+            // If we can extract the asset path, use it
+            const assetPath = assetMatch[0];
+            const script = document.createElement('script');
+            script.type = 'text/javascript'; // Use regular script instead of module
+            script.src = baseUrl + assetPath.substring(1); // Remove leading slash
+            document.body.appendChild(script);
+          } else {
+            // Fallback to a generic path
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = baseUrl + 'assets/index.js';
+            document.body.appendChild(script);
+          }
         }
       }, true);
     </script>

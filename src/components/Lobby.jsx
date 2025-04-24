@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { 
-  ref, 
-  onValue, 
-  push, 
-  set, 
-  remove, 
-  update 
+import {
+  ref,
+  onValue,
+  push,
+  set,
+  remove,
+  update
 } from 'firebase/database';
 import { auth, database } from '../firebase';
 import '../styles/Lobby.css';
@@ -19,23 +19,48 @@ function Lobby({ user }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const gamesRef = ref(database, 'games');
-    
-    const unsubscribe = onValue(gamesRef, (snapshot) => {
-      const gamesData = snapshot.val();
-      if (gamesData) {
-        const gamesList = Object.entries(gamesData).map(([id, game]) => ({
-          id,
-          ...game
-        }));
-        setGames(gamesList);
-      } else {
-        setGames([]);
-      }
-    });
+    // Log user information for debugging
+    console.log("Lobby - User info:", user);
 
-    return () => unsubscribe();
-  }, []);
+    const gamesRef = ref(database, 'games');
+
+    try {
+      const unsubscribe = onValue(gamesRef, (snapshot) => {
+        try {
+          const gamesData = snapshot.val();
+          if (gamesData) {
+            const gamesList = Object.entries(gamesData).map(([id, game]) => ({
+              id,
+              ...game,
+              // Ensure players object exists
+              players: game.players || {}
+            }));
+            setGames(gamesList);
+          } else {
+            setGames([]);
+          }
+        } catch (error) {
+          console.error("Error processing games data:", error);
+          setGames([]);
+        }
+      }, (error) => {
+        console.error("Database read error:", error);
+        setError("Failed to load games. Please try again.");
+      });
+
+      return () => {
+        try {
+          unsubscribe();
+        } catch (error) {
+          console.error("Error unsubscribing from games:", error);
+        }
+      };
+    } catch (error) {
+      console.error("Error setting up games listener:", error);
+      setError("Failed to connect to the game server. Please try again.");
+      return () => {};
+    }
+  }, [user]);
 
   const handleCreateGame = async () => {
     if (!gameName.trim()) {
@@ -44,43 +69,82 @@ function Lobby({ user }) {
     }
 
     try {
+      console.log("Creating game with user:", user);
+
+      // Safety check for user object
+      if (!user || !user.uid) {
+        setError('User authentication issue. Please try logging in again.');
+        console.error("User object invalid:", user);
+        return;
+      }
+
       const gamesRef = ref(database, 'games');
       const newGameRef = push(gamesRef);
-      
-      await set(newGameRef, {
+
+      // Generate a display name for the user
+      const displayName = user.isAnonymous
+        ? `Guest-${user.uid.substring(0, 5)}`
+        : (user.displayName || `User-${user.uid.substring(0, 5)}`);
+
+      const gameData = {
         name: gameName,
         createdBy: user.uid,
-        creatorName: user.displayName || 'Anonymous',
+        creatorName: displayName,
         players: {
           [user.uid]: {
             id: user.uid,
-            name: user.displayName || 'Anonymous',
-            isReady: false
+            name: displayName,
+            isReady: false,
+            isAnonymous: !!user.isAnonymous
           }
         },
         status: 'waiting',
         createdAt: Date.now()
-      });
+      };
+
+      console.log("Creating game with data:", gameData);
+      await set(newGameRef, gameData);
 
       navigate(`/game/${newGameRef.key}`);
     } catch (error) {
-      setError(error.message);
+      console.error("Error creating game:", error);
+      setError(error.message || "Failed to create game. Please try again.");
     }
   };
 
   const handleJoinGame = async (gameId) => {
     try {
+      console.log("Joining game with user:", user);
+
+      // Safety check for user object
+      if (!user || !user.uid) {
+        setError('User authentication issue. Please try logging in again.');
+        console.error("User object invalid:", user);
+        return;
+      }
+
+      // Generate a display name for the user
+      const displayName = user.isAnonymous
+        ? `Guest-${user.uid.substring(0, 5)}`
+        : (user.displayName || `User-${user.uid.substring(0, 5)}`);
+
       const gameRef = ref(database, `games/${gameId}/players/${user.uid}`);
-      
-      await set(gameRef, {
+
+      const playerData = {
         id: user.uid,
-        name: user.displayName || 'Anonymous',
-        isReady: false
-      });
+        name: displayName,
+        isReady: false,
+        isAnonymous: !!user.isAnonymous,
+        joinedAt: Date.now()
+      };
+
+      console.log("Joining game with player data:", playerData);
+      await set(gameRef, playerData);
 
       navigate(`/game/${gameId}`);
     } catch (error) {
-      setError(error.message);
+      console.error("Error joining game:", error);
+      setError(error.message || "Failed to join game. Please try again.");
     }
   };
 
@@ -98,7 +162,7 @@ function Lobby({ user }) {
         <h2>Game Lobby</h2>
         <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </div>
-      
+
       <div className="create-game">
         <input
           type="text"
@@ -108,9 +172,9 @@ function Lobby({ user }) {
         />
         <button onClick={handleCreateGame}>Create Game</button>
       </div>
-      
+
       {error && <p className="error">{error}</p>}
-      
+
       <div className="games-list">
         <h3>Available Games</h3>
         {games.length === 0 ? (
@@ -119,21 +183,24 @@ function Lobby({ user }) {
           games.map((game) => (
             <div key={game.id} className="game-item">
               <div className="game-info">
-                <h4>{game.name}</h4>
-                <p>Created by: {game.creatorName}</p>
+                <h4>{game.name || 'Unnamed Game'}</h4>
+                <p>Created by: {game.creatorName || 'Unknown'}</p>
                 <p>Players: {Object.keys(game.players || {}).length}/4</p>
-                <p>Status: {game.status}</p>
+                <p>Status: {game.status || 'unknown'}</p>
               </div>
-              {game.status === 'waiting' && !game.players[user.uid] && (
-                <button 
+              {/* Safe check for user and game status */}
+              {user && user.uid && game.status === 'waiting' &&
+               game.players && !game.players[user.uid] && (
+                <button
                   className="join-btn"
                   onClick={() => handleJoinGame(game.id)}
                 >
                   Join
                 </button>
               )}
-              {game.players && game.players[user.uid] && (
-                <button 
+              {/* Safe check for user and player membership */}
+              {user && user.uid && game.players && game.players[user.uid] && (
+                <button
                   className="resume-btn"
                   onClick={() => navigate(`/game/${game.id}`)}
                 >

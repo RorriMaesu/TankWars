@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "deploy": "gh-pages -d dist",
     "deploy:script": "node scripts/deploy.js",
-    "predeploy": "npm run build && cp public/tank-icon.svg public/404.html public/.nojekyll public/robots.txt public/sitemap.xml public/manifest.json dist/"
+    "predeploy": "npm run build && node scripts/copy-public-files.js"
   },
   "dependencies": {
     "firebase": "^10.7.0",

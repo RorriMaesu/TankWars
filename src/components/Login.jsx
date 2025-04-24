@@ -2,7 +2,9 @@ import { useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInAnonymously
+  signInAnonymously,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import '../styles/Login.css';
@@ -61,6 +63,41 @@ function Login() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    console.log("Google login requested");
+    setError('');
+    setLoading(true);
+
+    try {
+      console.log("Initializing Google Auth Provider...");
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      console.log("Attempting Google sign in...");
+      const userCredential = await signInWithPopup(auth, provider);
+      console.log("Google user signed in successfully:", userCredential.user.uid);
+      console.log("User display name:", userCredential.user.displayName);
+      console.log("User email:", userCredential.user.email);
+    } catch (error) {
+      console.error("Google authentication error:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+
+      // Handle specific Google Sign-In errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled. Please try again.');
+      } else if (error.code === 'auth/popup-blocked') {
+        setError('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+      } else {
+        setError(error.message || 'Failed to sign in with Google. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login-container">
       <h2>{isSignUp ? 'Sign Up' : 'Login'}</h2>
@@ -100,6 +137,16 @@ function Login() {
         onClick={() => setIsSignUp(!isSignUp)}
       >
         {isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'}
+      </button>
+
+      <div className="divider">or</div>
+
+      <button
+        className="google-login"
+        onClick={handleGoogleLogin}
+        disabled={loading}
+      >
+        Sign in with Google
       </button>
 
       <div className="divider">or</div>

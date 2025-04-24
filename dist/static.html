@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Wars - Static Version</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1a1a1a;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #4CAF50;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      margin-bottom: 1.5rem;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    .button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      text-decoration: none;
+      margin: 10px;
+      display: inline-block;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .error-message {
+      color: #ff6b6b;
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ff6b6b;
+      border-radius: 4px;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tank Wars</h1>
+  <p>Welcome to Tank Wars, a classic multiplayer tank battle game!</p>
+  
+  <div class="error-message">
+    <p>We're experiencing some technical difficulties with the GitHub Pages deployment.</p>
+    <p>Please try one of the following options:</p>
+  </div>
+  
+  <div>
+    <a href="https://rorrimaesu.github.io/TankWars/index.html" class="button">Try Main Page</a>
+    <a href="https://github.com/RorriMaesu/TankWars" class="button">View on GitHub</a>
+  </div>
+  
+  <script>
+    // Check if we can load the main app
+    window.addEventListener('load', function() {
+      // Try to load the main script
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = './assets/index.js';
+      script.onerror = function() {
+        console.error('Failed to load main script');
+      };
+      document.body.appendChild(script);
+      
+      // Try to load the main CSS
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = './assets/index.css';
+      document.head.appendChild(link);
+    });
+  </script>
+</body>
+</html>

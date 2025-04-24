@@ -6,17 +6,25 @@ export default defineConfig({
   plugins: [react()],
   base: '/TankWars/', // This is important for GitHub Pages deployment
 
-  // Ensure proper MIME types for GitHub Pages
+  // Static build configuration for GitHub Pages
   build: {
     outDir: 'dist',
-    // Use consistent filenames for GitHub Pages compatibility
+    // Disable code splitting for a single bundle
     rollupOptions: {
       output: {
-        // Use predictable filenames for the main entry point
-        entryFileNames: 'assets/index.js',
-        chunkFileNames: 'assets/[name].[hash].js',
+        manualChunks: undefined,
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
         assetFileNames: 'assets/[name].[ext]'
       }
-    }
+    },
+    // Ensure all assets are included in the build
+    assetsInlineLimit: 0,
+    // Generate a completely static build
+    target: 'es2015',
+    // Minify the output
+    minify: 'terser',
+    // Ensure sourcemaps are generated
+    sourcemap: false
   }
 })

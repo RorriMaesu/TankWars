@@ -25,13 +25,19 @@ function ClassicGame({ user }) {
 
   // Initialize game and set up listeners
   useEffect(() => {
-    const gameDbRef = ref(database, `classicGames/${gameId}`);
+    const gameDbRef = ref(database, `games/${gameId}`);
 
     const unsubscribe = onValue(gameDbRef, (snapshot) => {
       const gameData = snapshot.val();
 
       if (!gameData) {
         setError('Game not found');
+        return;
+      }
+
+      // Verify this is a classic game
+      if (gameData.gameType !== 'classic') {
+        setError('This is not a classic game');
         return;
       }
 
@@ -49,7 +55,7 @@ function ClassicGame({ user }) {
     });
 
     // Set up disconnect handler to remove player from game
-    const playerRef = ref(database, `classicGames/${gameId}/players/${user.uid}`);
+    const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
     onDisconnect(playerRef).remove();
 
     return () => {
@@ -59,7 +65,7 @@ function ClassicGame({ user }) {
 
   // Handle game events
   const handleGameEvent = (eventType, data) => {
-    const gameRef = ref(database, `classicGames/${gameId}`);
+    const gameRef = ref(database, `games/${gameId}`);
 
     switch (eventType) {
       case 'fire':
@@ -89,14 +95,14 @@ function ClassicGame({ user }) {
         const currentHealth = gameState.tanks[playerId]?.health || 100;
         const newHealth = Math.max(0, currentHealth - damage);
 
-        update(ref(database, `classicGames/${gameId}/tanks/${playerId}`), {
+        update(ref(database, `games/${gameId}/tanks/${playerId}`), {
           health: newHealth
         });
 
         // Check if player is defeated
         if (newHealth <= 0) {
           // Handle player defeat
-          update(ref(database, `classicGames/${gameId}/tanks/${playerId}`), {
+          update(ref(database, `games/${gameId}/tanks/${playerId}`), {
             defeated: true
           });
 
@@ -140,7 +146,7 @@ function ClassicGame({ user }) {
 
   // Handle ready status toggle
   const handleToggleReady = () => {
-    const playerRef = ref(database, `classicGames/${gameId}/players/${user.uid}`);
+    const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
     update(playerRef, {
       isReady: !players[user.uid]?.isReady
     });
@@ -181,7 +187,7 @@ function ClassicGame({ user }) {
     });
 
     // Update game status and add tanks
-    const gameRef = ref(database, `classicGames/${gameId}`);
+    const gameRef = ref(database, `games/${gameId}`);
     update(gameRef, {
       status: 'playing',
       tanks: tankPositions,
@@ -195,12 +201,12 @@ function ClassicGame({ user }) {
   // Handle leaving the game
   const handleLeaveGame = () => {
     // Remove player from game
-    const playerRef = ref(database, `classicGames/${gameId}/players/${user.uid}`);
+    const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
     remove(playerRef);
 
     // If player is the creator and game hasn't started, delete the game
     if (game.createdBy === user.uid && game.status === 'waiting') {
-      const gameRef = ref(database, `classicGames/${gameId}`);
+      const gameRef = ref(database, `games/${gameId}`);
       remove(gameRef);
     }
 

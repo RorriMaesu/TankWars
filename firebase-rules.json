@@ -1,0 +1,34 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "games": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$gameId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "players": {
+          "$playerId": {
+            ".read": "auth != null",
+            ".write": "auth != null || $playerId === auth.uid"
+          }
+        }
+      }
+    },
+    "classicGames": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$gameId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "players": {
+          "$playerId": {
+            ".read": "auth != null",
+            ".write": "auth != null || $playerId === auth.uid"
+          }
+        }
+      }
+    }
+  }
+}

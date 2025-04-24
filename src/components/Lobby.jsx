@@ -33,22 +33,27 @@ function Lobby({ user }) {
         try {
           const gamesData = snapshot.val();
           if (gamesData) {
-            const gamesList = Object.entries(gamesData)
-              .map(([id, game]) => ({
-                id,
-                ...game,
-                // Ensure players object exists
-                players: game.players || {}
-              }))
-              .filter(game => !game.gameType || game.gameType === 'modern');
+            const allGames = Object.entries(gamesData).map(([id, game]) => ({
+              id,
+              ...game,
+              // Ensure players object exists
+              players: game.players || {}
+            }));
 
-            setGames(gamesList);
+            // Filter games based on gameType
+            const modernGames = allGames.filter(game => !game.gameType || game.gameType === 'modern');
+            const classicGames = allGames.filter(game => game.gameType === 'classic');
+
+            setGames(modernGames);
+            setClassicGames(classicGames);
           } else {
             setGames([]);
+            setClassicGames([]);
           }
         } catch (error) {
           console.error("Error processing games data:", error);
           setGames([]);
+          setClassicGames([]);
         }
       }, (error) => {
         console.error("Database read error:", error);
@@ -59,42 +64,12 @@ function Lobby({ user }) {
       setError("Failed to connect to the game server. Please try again.");
     }
 
-    // Listen for classic games
-    const classicGamesRef = ref(database, 'classicGames');
-    let classicGamesUnsubscribe;
-
-    try {
-      classicGamesUnsubscribe = onValue(classicGamesRef, (snapshot) => {
-        try {
-          const classicGamesData = snapshot.val();
-          if (classicGamesData) {
-            const classicGamesList = Object.entries(classicGamesData).map(([id, game]) => ({
-              id,
-              ...game,
-              // Ensure players object exists
-              players: game.players || {},
-              gameType: 'classic'
-            }));
-
-            setClassicGames(classicGamesList);
-          } else {
-            setClassicGames([]);
-          }
-        } catch (error) {
-          console.error("Error processing classic games data:", error);
-          setClassicGames([]);
-        }
-      }, (error) => {
-        console.error("Classic games database read error:", error);
-      });
-    } catch (error) {
-      console.error("Error setting up classic games listener:", error);
-    }
+    // We'll filter the games based on gameType instead of using a separate path
+    // This is handled in the games listener above
 
     return () => {
       try {
         if (gamesUnsubscribe) gamesUnsubscribe();
-        if (classicGamesUnsubscribe) classicGamesUnsubscribe();
       } catch (error) {
         console.error("Error unsubscribing from games:", error);
       }
@@ -117,9 +92,8 @@ function Lobby({ user }) {
         return;
       }
 
-      // Determine which database reference to use based on game type
-      const dbPath = gameType === 'classic' ? 'classicGames' : 'games';
-      const gamesRef = ref(database, dbPath);
+      // Use the same database path but add gameType field to differentiate
+      const gamesRef = ref(database, 'games');
       const newGameRef = push(gamesRef);
 
       // Generate a display name for the user
@@ -147,7 +121,7 @@ function Lobby({ user }) {
       console.log(`Creating ${gameType} game with data:`, gameData);
       await set(newGameRef, gameData);
 
-      // Navigate to the appropriate game route
+      // Navigate to the appropriate game route based on game type
       const route = gameType === 'classic' ? '/classic/' : '/game/';
       navigate(`${route}${newGameRef.key}`);
     } catch (error) {
@@ -172,9 +146,8 @@ function Lobby({ user }) {
         ? `Guest-${user.uid.substring(0, 5)}`
         : (user.displayName || `User-${user.uid.substring(0, 5)}`);
 
-      // Determine which database path to use
-      const dbPath = isClassic ? 'classicGames' : 'games';
-      const gameRef = ref(database, `${dbPath}/${gameId}/players/${user.uid}`);
+      // Use the same database path for all games
+      const gameRef = ref(database, `games/${gameId}/players/${user.uid}`);
 
       const playerData = {
         id: user.uid,

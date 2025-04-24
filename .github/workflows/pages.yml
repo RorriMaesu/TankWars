@@ -36,91 +36,12 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Copy additional files and verify build
+        
+      - name: Verify build output
         run: |
-          # Create .nojekyll file
-          touch dist/.nojekyll
-
-          # Copy essential files
-          cp public/tank-icon.svg dist/
-          cp public/404.html dist/ || echo "404.html not found"
-          cp public/robots.txt dist/ || echo "robots.txt not found"
-          cp public/sitemap.xml dist/ || echo "sitemap.xml not found"
-          cp public/manifest.json dist/ || echo "manifest.json not found"
-
-          # Create manifest.json if it doesn't exist
-          if [ ! -f dist/manifest.json ]; then
-            echo "Creating manifest.json..."
-            cat > dist/manifest.json << EOL
-{
-  "short_name": "Tank Wars",
-  "name": "Tank Wars - Multiplayer",
-  "icons": [
-    {
-      "src": "tank-icon.svg",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/svg+xml"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#1a1a1a"
-}
-EOL
-          fi
-
-          # Verify build output
           echo "Checking build output..."
           ls -la dist/
           ls -la dist/assets/
-
-          # Ensure index.js exists
-          if [ ! -f dist/assets/index.js ]; then
-            echo "index.js not found, checking for alternative files..."
-            find dist/assets -name "*.js" -type f
-            # If any JS file exists, copy it to index.js
-            FIRST_JS=$(find dist/assets -name "*.js" -type f | head -n 1)
-            if [ -n "$FIRST_JS" ]; then
-              echo "Copying $FIRST_JS to dist/assets/index.js"
-              cp "$FIRST_JS" dist/assets/index.js
-            fi
-          fi
-
-          # Ensure index.css exists
-          if [ ! -f dist/assets/index.css ]; then
-            echo "index.css not found, checking for alternative files..."
-            find dist/assets -name "*.css" -type f
-            # If any CSS file exists, copy it to index.css
-            FIRST_CSS=$(find dist/assets -name "*.css" -type f | head -n 1)
-            if [ -n "$FIRST_CSS" ]; then
-              echo "Copying $FIRST_CSS to dist/assets/index.css"
-              cp "$FIRST_CSS" dist/assets/index.css
-            fi
-          fi
-
-          # Create a simple fallback HTML file
-          echo "Creating fallback.html..."
-          cat > dist/fallback.html << EOL
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank Wars - Fallback</title>
-  <style>
-    body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 2rem; }
-    button { padding: 0.5rem 1rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 1rem; }
-  </style>
-</head>
-<body>
-  <h1>Tank Wars</h1>
-  <p>There was an error loading the game. Please try the main page again.</p>
-  <button onclick="window.location.href='/'">Go to Main Page</button>
-</body>
-</html>
-EOL
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

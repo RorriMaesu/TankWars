@@ -26,6 +26,8 @@
       }(window.location))
     </script>
     <!-- End Single Page Apps for GitHub Pages -->
+
+    <!-- CSS will be injected by Vite during build -->
   </head>
   <body>
     <div id="root"></div>
@@ -33,23 +35,34 @@
     <!-- Development script - will be replaced during build -->
     <script type="module" src="./src/main.jsx"></script>
 
-    <!-- CSS and JS will be injected by Vite during build -->
-
-    <!-- Error handling -->
+    <!-- Fallback for errors -->
     <script>
+      // Check if the app loaded correctly
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          if (document.getElementById('root').children.length === 0) {
+            console.error('App failed to load, showing fallback UI');
+            document.getElementById('root').innerHTML = `
+              <div style="text-align: center; padding: 2rem; font-family: sans-serif; color: white; background: #1a1a1a; height: 100vh;">
+                <h1>Tank Wars</h1>
+                <p>There was an error loading the game. Please try refreshing the page.</p>
+                <div>
+                  <button onclick="window.location.reload()" style="padding: 0.5rem 1rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 1rem;">
+                    Refresh Page
+                  </button>
+                  <a href="./static.html" style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 1rem; text-decoration: none; display: inline-block;">
+                    Try Static Version
+                  </a>
+                </div>
+              </div>
+            `;
+          }
+        }, 3000); // Wait 3 seconds to check if app loaded
+      });
+
+      // Handle general errors
       window.addEventListener('error', function(e) {
         console.error('Error loading resources:', e);
-        if (document.getElementById('root').children.length === 0) {
-          document.getElementById('root').innerHTML = `
-            <div style="text-align: center; padding: 2rem; font-family: sans-serif; color: white; background: #1a1a1a; height: 100vh;">
-              <h1>Tank Wars</h1>
-              <p>There was an error loading the game. Please try refreshing the page.</p>
-              <button onclick="window.location.reload()" style="padding: 0.5rem 1rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 1rem;">
-                Refresh Page
-              </button>
-            </div>
-          `;
-        }
       });
     </script>
   </body>

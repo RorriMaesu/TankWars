@@ -1,0 +1,136 @@
+.game-page {
+  width: 100%;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.leave-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.leave-btn:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+.waiting-room {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+}
+
+.waiting-room h3 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.players-list {
+  margin-bottom: 2rem;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background-color: #2a2a2a;
+}
+
+.status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.status.ready {
+  background-color: #22c55e;
+  color: white;
+}
+
+.status.not-ready {
+  background-color: #ef4444;
+  color: white;
+}
+
+.game-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ready-btn, .start-btn {
+  flex: 1;
+  padding: 0.75rem;
+}
+
+.ready-btn {
+  background-color: #4b5563;
+  color: white;
+}
+
+.ready-btn.ready {
+  background-color: #22c55e;
+}
+
+.start-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.start-btn:disabled {
+  background-color: #4b5563;
+  cursor: not-allowed;
+}
+
+.info-text {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.game-container {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  margin: 0 auto;
+  border: 2px solid #333;
+  background-color: #1e293b;
+  overflow: hidden;
+}
+
+.controls-info {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #d1d5db;
+}
+
+.controls-info p {
+  margin: 0;
+}
+
+.error-container {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-container .error {
+  margin-bottom: 1rem;
+  color: #ef4444;
+}

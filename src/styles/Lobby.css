@@ -1,0 +1,119 @@
+.lobby-container {
+  width: 100%;
+  max-width: 800px;
+}
+
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.logout-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.logout-btn:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+.create-game {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.create-game input {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background-color: #2a2a2a;
+  color: white;
+}
+
+.create-game button {
+  background-color: #646cff;
+  color: white;
+  border: none;
+}
+
+.create-game button:hover {
+  background-color: #535bf2;
+}
+
+.games-list {
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background-color: #1a1a1a;
+}
+
+.games-list h3 {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.no-games {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem 0;
+}
+
+.game-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background-color: #2a2a2a;
+}
+
+.game-item:last-child {
+  margin-bottom: 0;
+}
+
+.game-info {
+  text-align: left;
+}
+
+.game-info h4 {
+  margin-bottom: 0.5rem;
+  color: #646cff;
+}
+
+.game-info p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.join-btn, .resume-btn {
+  padding: 0.5rem 1rem;
+  min-width: 100px;
+}
+
+.join-btn {
+  background-color: #22c55e;
+  color: white;
+  border: none;
+}
+
+.join-btn:hover {
+  background-color: #16a34a;
+}
+
+.resume-btn {
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+}
+
+.resume-btn:hover {
+  background-color: #d97706;
+}

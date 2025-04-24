@@ -1,0 +1,30 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #646cff;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.5rem;
+}
+
+.error {
+  color: #ef4444;
+  margin: 1rem 0;
+}
+
+.success {
+  color: #22c55e;
+  margin: 1rem 0;
+}

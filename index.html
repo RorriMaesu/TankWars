@@ -25,7 +25,22 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- This script tag is only for development and will be replaced by Vite during build -->
+    <!-- Script tag for development - will be replaced by Vite during build -->
     <script type="module" src="./src/main.jsx"></script>
+    <!-- Fallback for GitHub Pages -->
+    <script>
+      // Check if the module script failed to load
+      window.addEventListener('error', function(e) {
+        if (e.target.src && e.target.src.endsWith('main.jsx')) {
+          console.log('Module script failed to load, trying fallback...');
+          // Create a new script tag with the correct path to the built JS file
+          const script = document.createElement('script');
+          script.type = 'module';
+          // Try to load the built JS file from assets directory
+          script.src = './assets/index.js';
+          document.body.appendChild(script);
+        }
+      }, true);
+    </script>
   </body>
 </html>

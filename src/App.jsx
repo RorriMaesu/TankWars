@@ -64,7 +64,7 @@ function App() {
         />
         <Route
           path="/game/:gameId"
-          element={user ? <ClassicGame user={user} /> : <Navigate to="/" />}
+          element={user ? <Game user={user} /> : <Navigate to="/" />}
         />
       </Routes>
 

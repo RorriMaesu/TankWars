@@ -130,10 +130,24 @@ function ClassicGame({ user }) {
 
         if (playerIds.length <= 1) return; // Game over
 
-        const currentTurnIndex = playerIds.indexOf(gameState.currentTurn);
-        const nextTurnIndex = (currentTurnIndex + 1) % playerIds.length;
+        // Log for debugging
+        console.log('Next turn - Current turn:', gameState.currentTurn);
+        console.log('Next turn - Active players:', playerIds);
+
+        // Find the current player's index, defaulting to -1 if not found
+        const currentTurnIndex = gameState.currentTurn ? playerIds.indexOf(gameState.currentTurn) : -1;
+        console.log('Next turn - Current turn index:', currentTurnIndex);
+
+        // Calculate the next player's index, ensuring it's valid even if currentTurnIndex is -1
+        const nextTurnIndex = (currentTurnIndex >= 0 && currentTurnIndex < playerIds.length - 1)
+          ? currentTurnIndex + 1
+          : 0;
         const nextPlayerId = playerIds[nextTurnIndex];
 
+        console.log('Next turn - Next turn index:', nextTurnIndex);
+        console.log('Next turn - Next player ID:', nextPlayerId);
+
+        // Update the current turn in the database
         update(gameRef, {
           currentTurn: nextPlayerId
         });
@@ -188,6 +202,11 @@ function ClassicGame({ user }) {
 
     // Update game status and add tanks
     const gameRef = ref(database, `games/${gameId}`);
+
+    // Log for debugging
+    console.log('Starting game with players:', playerIds);
+    console.log('First player (will start):', playerIds[0]);
+
     update(gameRef, {
       status: 'playing',
       tanks: tankPositions,

@@ -16,14 +16,19 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
   const [selectedWeapon, setSelectedWeapon] = useState(WEAPONS[0]);
   const [showWeaponMenu, setShowWeaponMenu] = useState(false);
   const [weapons, setWeapons] = useState(WEAPONS.map(w => ({ ...w })));
-  
+
   // Reset weapons when game state changes
   useEffect(() => {
     if (gameState.status === 'playing' && !gameState.weaponsInitialized) {
       setWeapons(WEAPONS.map(w => ({ ...w })));
     }
-  }, [gameState]);
-  
+
+    // Log current turn and player status for debugging
+    console.log('GameControls - Current turn:', gameState.currentTurn);
+    console.log('GameControls - Is current player turn:', isCurrentTurn);
+    console.log('GameControls - Projectile active:', gameState.projectile?.active);
+  }, [gameState, isCurrentTurn]);
+
   // Handle angle change
   const handleAngleChange = (increment) => {
     setAngle(prev => {
@@ -31,7 +36,7 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
       return Math.max(0, Math.min(90, newAngle));
     });
   };
-  
+
   // Handle power change
   const handlePowerChange = (increment) => {
     setPower(prev => {
@@ -39,24 +44,24 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
       return Math.max(10, Math.min(100, newPower));
     });
   };
-  
+
   // Handle weapon selection
   const handleSelectWeapon = (weapon) => {
     setSelectedWeapon(weapon);
     setShowWeaponMenu(false);
   };
-  
+
   // Handle fire button click
   const handleFire = () => {
     if (!isCurrentTurn) return;
-    
+
     // Calculate initial velocity
     const { velocityX, velocityY } = calculateInitialVelocity(angle, power);
-    
+
     // Get current tank position
     const currentTank = gameState.tanks[currentPlayerId];
     if (!currentTank) return;
-    
+
     // Create projectile
     const projectile = {
       active: true,
@@ -67,27 +72,27 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
       ownerId: currentPlayerId,
       weapon: selectedWeapon.id
     };
-    
+
     // Update weapon count if limited
     if (selectedWeapon.limited) {
       const updatedWeapons = [...weapons];
       const weaponIndex = updatedWeapons.findIndex(w => w.id === selectedWeapon.id);
-      
+
       if (weaponIndex !== -1 && updatedWeapons[weaponIndex].count > 0) {
         updatedWeapons[weaponIndex].count--;
         setWeapons(updatedWeapons);
-        
+
         // Switch to basic weapon if out of ammo
         if (updatedWeapons[weaponIndex].count === 0) {
           setSelectedWeapon(WEAPONS[0]);
         }
       }
     }
-    
+
     // Fire the projectile
     onFire(projectile);
   };
-  
+
   // Render the weapon selection menu
   const renderWeaponMenu = () => {
     return (
@@ -114,7 +119,7 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
       </div>
     );
   };
-  
+
   return (
     <div className="game-controls">
       {showWeaponMenu ? (
@@ -131,7 +136,7 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
                 <button onClick={() => handleAngleChange(5)} disabled={!isCurrentTurn}>+5°</button>
               </div>
             </div>
-            
+
             <div className="control-group">
               <label>Power: {power}%</label>
               <div className="button-group">
@@ -141,10 +146,10 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
                 <button onClick={() => handlePowerChange(10)} disabled={!isCurrentTurn}>+10%</button>
               </div>
             </div>
-            
+
             <div className="control-group">
               <label>Weapon</label>
-              <button 
+              <button
                 className="weapon-select"
                 onClick={() => setShowWeaponMenu(true)}
                 disabled={!isCurrentTurn}
@@ -153,8 +158,8 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
                 {selectedWeapon.limited && ` (${weapons.find(w => w.id === selectedWeapon.id)?.count || 0} left)`}
               </button>
             </div>
-            
-            <button 
+
+            <button
               className="fire-button"
               onClick={handleFire}
               disabled={!isCurrentTurn || gameState.projectile?.active}
@@ -162,14 +167,17 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
               FIRE!
             </button>
           </div>
-          
+
           <div className="player-info">
             {Object.values(gameState.tanks || {}).map(tank => (
-              <div 
-                key={tank.id} 
-                className={`player-status ${tank.id === currentPlayerId ? 'current-player' : ''}`}
+              <div
+                key={tank.id}
+                className={`player-status ${tank.id === currentPlayerId ? 'current-player' : ''} ${tank.id === gameState.currentTurn ? 'active-turn' : ''}`}
               >
-                <div className="player-name">{tank.name}</div>
+                <div className="player-name">
+                  {tank.name}
+                  {tank.id === gameState.currentTurn && <span className="turn-indicator"> (Current Turn)</span>}
+                </div>
                 <div className="player-health">
                   <div className="health-bar" style={{ width: `${tank.health}%` }}></div>
                   <span>{tank.health}%</span>

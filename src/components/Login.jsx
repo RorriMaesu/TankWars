@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { 
-  createUserWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInAnonymously
 } from 'firebase/auth';
@@ -16,16 +16,26 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Login form submitted. Mode:", isSignUp ? "Sign Up" : "Login");
+    console.log("Email:", email);
     setError('');
     setLoading(true);
 
     try {
+      console.log("Attempting to authenticate with email/password...");
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        console.log("Creating new user account...");
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log("User created successfully:", userCredential.user.uid);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        console.log("Signing in existing user...");
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log("User signed in successfully:", userCredential.user.uid);
       }
     } catch (error) {
+      console.error("Authentication error:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -33,12 +43,18 @@ function Login() {
   };
 
   const handleAnonymousLogin = async () => {
+    console.log("Anonymous login requested");
     setError('');
     setLoading(true);
-    
+
     try {
-      await signInAnonymously(auth);
+      console.log("Attempting anonymous sign in...");
+      const userCredential = await signInAnonymously(auth);
+      console.log("Anonymous user signed in successfully:", userCredential.user.uid);
     } catch (error) {
+      console.error("Anonymous authentication error:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -48,7 +64,7 @@ function Login() {
   return (
     <div className="login-container">
       <h2>{isSignUp ? 'Sign Up' : 'Login'}</h2>
-      
+
       <form onSubmit={handleSubmit} className="login-form">
         <div className="form-group">
           <label htmlFor="email">Email</label>
@@ -60,7 +76,7 @@ function Login() {
             required
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="password">Password</label>
           <input
@@ -71,24 +87,24 @@ function Login() {
             required
           />
         </div>
-        
+
         {error && <p className="error">{error}</p>}
-        
+
         <button type="submit" disabled={loading}>
           {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Login'}
         </button>
       </form>
-      
-      <button 
+
+      <button
         className="toggle-auth"
         onClick={() => setIsSignUp(!isSignUp)}
       >
         {isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'}
       </button>
-      
+
       <div className="divider">or</div>
-      
-      <button 
+
+      <button
         className="anonymous-login"
         onClick={handleAnonymousLogin}
         disabled={loading}

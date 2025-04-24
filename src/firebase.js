@@ -17,19 +17,43 @@ const firebaseConfig = {
   databaseURL: "https://tankwars-97e19-default-rtdb.firebaseio.com" // Add this line for Realtime Database
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
+// Add debugging
+console.log("Firebase initialization starting...");
 
-// Initialize Analytics only if supported
-let analytics = null;
-isSupported().then(supported => {
-  if (supported) {
-    analytics = getAnalytics(app);
-  }
-}).catch(error => {
-  console.error("Analytics error:", error);
-});
+// Initialize variables
+let app, auth, database, analytics = null;
+
+try {
+  // Initialize Firebase
+  console.log("Initializing Firebase app with config:", JSON.stringify(firebaseConfig));
+  app = initializeApp(firebaseConfig);
+  console.log("Firebase app initialized successfully");
+
+  // Initialize Auth
+  console.log("Initializing Firebase Auth...");
+  auth = getAuth(app);
+  console.log("Firebase Auth initialized successfully");
+
+  // Initialize Database
+  console.log("Initializing Firebase Realtime Database...");
+  database = getDatabase(app);
+  console.log("Firebase Realtime Database initialized successfully");
+
+  // Initialize Analytics only if supported
+  console.log("Checking Analytics support...");
+  isSupported().then(supported => {
+    if (supported) {
+      console.log("Analytics is supported, initializing...");
+      analytics = getAnalytics(app);
+      console.log("Analytics initialized successfully");
+    } else {
+      console.log("Analytics is not supported in this environment");
+    }
+  }).catch(error => {
+    console.error("Analytics error:", error);
+  });
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+}
 
 export { app, auth, database, analytics };

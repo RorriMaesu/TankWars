@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ref, onValue, update, remove, onDisconnect, set } from 'firebase/database';
+import { ref, onValue, update, remove, onDisconnect, set, get, serverTimestamp } from 'firebase/database';
 import { database } from '../firebase';
 import GameCanvas from './GameCanvas';
 import GameControls from './GameControls';
@@ -69,7 +69,43 @@ function Game({ user }) {
     });
 
     // Set up disconnect handler to remove player from game when they disconnect
-    onDisconnect(playerRef).remove();
+    onDisconnect(playerRef).remove().then(() => {
+      console.log('Disconnect handler set up successfully');
+    }).catch(error => {
+      console.error('Error setting up disconnect handler:', error);
+    });
+
+    // Set up a presence system to detect when players go offline
+    const connectedRef = ref(database, '.info/connected');
+    onValue(connectedRef, (snapshot) => {
+      // If we're connected (or reconnected after a loss of connection)
+      if (snapshot.val() === true) {
+        console.log('Connected to Firebase');
+
+        // Set up a last online timestamp that will be updated on disconnect
+        const lastOnlineRef = ref(database, `games/${gameId}/players/${user.uid}/lastOnline`);
+        onDisconnect(lastOnlineRef).set(serverTimestamp());
+
+        // When this client disconnects, check if the game is empty and delete it if so
+        const gamePlayersRef = ref(database, `games/${gameId}/players`);
+        const checkEmptyGame = () => {
+          get(gamePlayersRef).then((snapshot) => {
+            const players = snapshot.val();
+            if (!players || Object.keys(players).length === 0) {
+              console.log('Game is empty after disconnect, deleting game room');
+              remove(ref(database, `games/${gameId}`));
+            }
+          }).catch(error => {
+            console.error('Error checking if game is empty:', error);
+          });
+        };
+
+        // Set up the check to run after the player is removed
+        onDisconnect(playerRef).remove().then(checkEmptyGame);
+      } else {
+        console.log('Disconnected from Firebase');
+      }
+    });
 
     // Clean up listeners when component unmounts
     return () => {

@@ -40,7 +40,35 @@ function Lobby({ user }) {
 
             // Only get classic games
             const classicGames = allGames.filter(game => game.gameType === 'classic');
-            setGames(classicGames);
+
+            // Check for stale games (games that haven't been updated in over 24 hours)
+            const now = Date.now();
+            const ONE_DAY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+            classicGames.forEach(game => {
+              // If the game is older than 24 hours and has no players, delete it
+              if (
+                game.createdAt &&
+                (now - game.createdAt > ONE_DAY) &&
+                (!game.players || Object.keys(game.players).length === 0)
+              ) {
+                console.log(`Deleting stale game: ${game.id}`);
+                remove(ref(database, `games/${game.id}`));
+              }
+
+              // If the game has no players, delete it regardless of age
+              if (!game.players || Object.keys(game.players).length === 0) {
+                console.log(`Deleting empty game: ${game.id}`);
+                remove(ref(database, `games/${game.id}`));
+              }
+            });
+
+            // Filter out games that are being deleted
+            const activeGames = classicGames.filter(game =>
+              game.players && Object.keys(game.players).length > 0
+            );
+
+            setGames(activeGames);
           } else {
             setGames([]);
           }

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rorrimaesu.github.io/TankWars/sitemap.xml

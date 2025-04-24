@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="/TankWars/" />
+    <link rel="icon" type="image/svg+xml" href="./tank-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Tank Wars - An online multiplayer tank battle game" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>Tank Wars - Multiplayer</title>
+    <!-- Start Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <!-- End Single Page Apps for GitHub Pages -->
+    <script type="module" crossorigin src="/TankWars/assets/index.js"></script>
+    <link rel="stylesheet" crossorigin href="/TankWars/assets/index.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Script tag for development - will be replaced by Vite during build -->
+
+    <!-- Direct script loading for GitHub Pages -->
+    <script>
+      // Check if we're in production (GitHub Pages)
+      if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
+        console.log('Running in production mode, loading bundled script directly');
+
+        // Remove the module script to prevent it from loading
+        const moduleScript = document.querySelector('script[type="module"]');
+        if (moduleScript) {
+          moduleScript.remove();
+        }
+
+        // Get the base URL for the site
+        const baseUrl = document.querySelector('base')?.href || '/TankWars/';
+
+        // Create a regular script tag for the main bundle
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = baseUrl + 'assets/index.js';
+        document.body.appendChild(script);
+
+        // Also load the CSS directly
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = baseUrl + 'assets/index.css';
+        document.head.appendChild(link);
+      }
+    </script>
+  </body>
+</html>

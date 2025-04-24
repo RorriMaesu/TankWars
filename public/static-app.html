@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Wars - Classic Multiplayer Game</title>
+  <link rel="icon" type="image/svg+xml" href="./tank-icon.svg" />
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --secondary-color: #2196F3;
+      --background-color: #1a1a1a;
+      --text-color: #ffffff;
+      --border-color: #333333;
+      --button-hover: #45a049;
+      --error-color: #ff6b6b;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      color: var(--secondary-color);
+    }
+    
+    p {
+      margin-bottom: 15px;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      text-decoration: none;
+      margin: 10px;
+      transition: background-color 0.3s;
+    }
+    
+    .button:hover {
+      background-color: var(--button-hover);
+    }
+    
+    .button.secondary {
+      background-color: var(--secondary-color);
+    }
+    
+    .button.secondary:hover {
+      background-color: #1976D2;
+    }
+    
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 0;
+    }
+    
+    .game-preview {
+      margin: 30px 0;
+      text-align: center;
+    }
+    
+    .game-preview img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin: 30px 0;
+    }
+    
+    .feature-card {
+      background-color: #222;
+      border-radius: 8px;
+      padding: 20px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .feature-card h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    
+    .cta-section {
+      text-align: center;
+      padding: 40px 0;
+      background-color: #222;
+      border-radius: 8px;
+      margin: 30px 0;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 20px 0;
+      border-top: 1px solid var(--border-color);
+      margin-top: 40px;
+    }
+    
+    .error-message {
+      color: var(--error-color);
+      background-color: rgba(255, 107, 107, 0.1);
+      border: 1px solid var(--error-color);
+      border-radius: 4px;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    @media (max-width: 768px) {
+      .features {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .feature-card {
+        width: 100%;
+        max-width: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Tank Wars</h1>
+      <p>Classic Multiplayer Tank Battle Game</p>
+    </header>
+    
+    <div class="main-content">
+      <div class="error-message">
+        <p>We're experiencing some technical difficulties with the dynamic version of Tank Wars.</p>
+        <p>Our team is working to resolve this issue as soon as possible.</p>
+      </div>
+      
+      <div class="game-preview">
+        <h2>Classic Tank Wars Reimagined</h2>
+        <p>Experience the nostalgia of the 1986 PC game with modern multiplayer capabilities</p>
+        <div style="width: 600px; height: 300px; background-color: #333; border-radius: 8px; margin: 20px auto; display: flex; align-items: center; justify-content: center;">
+          <div style="text-align: center;">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 10H20V16H4V10Z" fill="#4CAF50"/>
+              <path d="M7 8H17V10H7V8Z" fill="#4CAF50"/>
+              <path d="M10 6H14V8H10V6Z" fill="#4CAF50"/>
+              <path d="M18 12H22V14H18V12Z" fill="#4CAF50"/>
+              <circle cx="7" cy="17" r="2" fill="#333"/>
+              <circle cx="17" cy="17" r="2" fill="#333"/>
+            </svg>
+            <p style="margin-top: 10px;">Game Preview Image</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="features">
+        <div class="feature-card">
+          <h3>Online Multiplayer</h3>
+          <p>Battle against friends or random opponents in real-time matches</p>
+        </div>
+        <div class="feature-card">
+          <h3>Classic Gameplay</h3>
+          <p>Experience the original Tank Wars gameplay with improved graphics and physics</p>
+        </div>
+        <div class="feature-card">
+          <h3>Full 360° Aiming</h3>
+          <p>Precise control with full 360-degree tank rotation and aiming</p>
+        </div>
+      </div>
+      
+      <div class="cta-section">
+        <h2>Ready to Play?</h2>
+        <p>Tank Wars is currently under maintenance. Please check back soon!</p>
+        <a href="https://github.com/RorriMaesu/TankWars" class="button">View on GitHub</a>
+        <a href="https://rorrimaesu.github.io/TankWars/index.html" class="button secondary">Try Dynamic Version</a>
+      </div>
+    </div>
+    
+    <footer>
+      <p>&copy; 2023 Tank Wars. All rights reserved.</p>
+      <p>Created by Andrew J. Green</p>
+    </footer>
+  </div>
+</body>
+</html>

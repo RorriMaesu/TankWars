@@ -13,16 +13,24 @@ if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
 }
 
-// Copy index-static.html to index.html in the dist directory
-const staticHtmlPath = path.join(rootDir, 'public', 'index-static.html');
-const indexHtmlPath = path.join(distDir, 'index.html');
+// Copy static HTML files to the dist directory
+const staticFiles = [
+  { source: 'static-app.html', dest: 'index.html' },
+  { source: 'index-static.html', dest: 'fallback.html' },
+  { source: 'tank-icon.svg', dest: 'tank-icon.svg' }
+];
 
-if (fs.existsSync(staticHtmlPath)) {
-  console.log('Copying index-static.html to dist/index.html...');
-  fs.copyFileSync(staticHtmlPath, indexHtmlPath);
-  console.log('✓ Successfully copied static HTML file');
-} else {
-  console.error('✗ Error: index-static.html not found in public directory');
+for (const file of staticFiles) {
+  const sourcePath = path.join(rootDir, 'public', file.source);
+  const destPath = path.join(distDir, file.dest);
+
+  if (fs.existsSync(sourcePath)) {
+    console.log(`Copying ${file.source} to dist/${file.dest}...`);
+    fs.copyFileSync(sourcePath, destPath);
+    console.log(`✓ Successfully copied ${file.source}`);
+  } else {
+    console.warn(`⚠ Warning: ${file.source} not found in public directory`);
+  }
 }
 
 // Create a basic manifest.json if it doesn't exist

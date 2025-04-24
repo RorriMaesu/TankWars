@@ -254,14 +254,14 @@ function Game({ user }) {
       if (index % 2 === 0) {
         // Left side - position at 1/5 of the screen width
         x = Math.floor(150 + (Math.random() * 50));
-        // Left side tank faces right - using a more moderate starting angle
+        // Left side tank faces right with a slight upward angle
         // This gives a good balance between distance and height
-        initialAngle = 20; // Slightly higher angle for better initial aiming
+        initialAngle = 20; // 20 degrees is slightly up and to the right
       } else {
         // Right side - position at 4/5 of the screen width
         x = Math.floor(600 + (Math.random() * 50));
-        // Right side tank faces left - mirror of the left tank's angle
-        initialAngle = 160; // 180 - 20 = 160 degrees, perfectly mirrored
+        // Right side tank faces left with a slight upward angle
+        initialAngle = 160; // 160 degrees is slightly up and to the left
       }
 
       tankPositions[playerId] = {

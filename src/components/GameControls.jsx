@@ -76,9 +76,7 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
   // Handle angle change
   const handleAngleChange = (increment) => {
     setAngle(prev => {
-      const newAngle = prev + increment;
-      // In classic Tank Wars, angle is limited between 0 and 90 degrees
-      // For left tank (0-90), for right tank (90-180)
+      let newAngle = prev + increment;
 
       // Get the current tank
       const currentTank = gameState.tanks[currentPlayerId];
@@ -87,32 +85,26 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
       // Check if this is a left or right tank based on position
       const isLeftTank = currentTank.x < CANVAS_WIDTH / 2;
 
-      // Apply expanded angle limits to allow for higher aiming
+      // Allow full 360-degree rotation
+      // Normalize angle to 0-359 range
+      newAngle = ((newAngle % 360) + 360) % 360;
+
+      // For right tank, we need to convert the UI angle to the actual angle
+      let actualAngle;
       if (isLeftTank) {
-        // Left tank: -30 to 90 degrees (facing right)
-        // Negative angles allow aiming higher (more upward)
-        const limitedAngle = Math.max(-30, Math.min(90, newAngle));
-
-        // Update the tank's angle in the database to match the firing angle
-        // This will rotate the tank barrel
-        const tankRef = ref(database, `games/${gameId}/tanks/${currentPlayerId}`);
-        update(tankRef, { angle: limitedAngle });
-
-        return limitedAngle;
+        // For left tank, the UI angle is the same as the actual angle
+        actualAngle = newAngle;
       } else {
-        // Right tank: 90 to 210 degrees (facing left)
-        // Angles > 180 allow aiming higher (more upward)
-        // Convert the input angle (-30 to 90) to the appropriate range (210-90)
-        const actualAngle = 180 - newAngle;
-        const limitedAngle = Math.max(90, Math.min(210, actualAngle));
-
-        // Update the tank's angle in the database
-        const tankRef = ref(database, `games/${gameId}/tanks/${currentPlayerId}`);
-        update(tankRef, { angle: limitedAngle });
-
-        // Return the UI angle (-30 to 90)
-        return Math.max(-30, Math.min(90, newAngle));
+        // For right tank, we need to convert the UI angle to the actual angle
+        // This maintains the mirrored control scheme while allowing 360-degree rotation
+        actualAngle = (180 + newAngle) % 360;
       }
+
+      // Update the tank's angle in the database
+      const tankRef = ref(database, `games/${gameId}/tanks/${currentPlayerId}`);
+      update(tankRef, { angle: actualAngle });
+
+      return newAngle;
     });
   };
 
@@ -257,21 +249,31 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
               <label>
                 Angle: {angle}°
                 {currentTank && currentTank.x > CANVAS_WIDTH / 2 ?
-                  <span className="actual-angle">(Actual: {180-angle}°)</span> :
+                  <span className="actual-angle">(Actual: {(180 + angle) % 360}°)</span> :
                   ''
                 }
-                {angle < 0 ?
-                  <span className="angle-hint"> - Aiming higher</span> :
-                  angle > 75 ?
-                  <span className="angle-hint"> - Aiming lower</span> :
-                  ''
-                }
+                <span className="angle-hint">
+                  {angle > 270 || angle < 90 ?
+                    ` - Aiming ${angle > 0 && angle < 90 ? 'up-right' :
+                      angle === 0 ? 'right' :
+                      angle === 270 ? 'up' : 'up-left'}` :
+                    angle > 90 && angle < 270 ?
+                    ` - Aiming ${angle > 180 && angle < 270 ? 'down-left' :
+                      angle === 180 ? 'left' :
+                      angle === 90 ? 'down' : 'down-right'}` :
+                    angle === 90 ? ' - Aiming down' :
+                    angle === 270 ? ' - Aiming up' : ''}
+                </span>
               </label>
               <div className="button-group">
+                <button onClick={() => handleAngleChange(-45)} disabled={!isCurrentTurn} className="angle-btn large">-45°</button>
+                <button onClick={() => handleAngleChange(-15)} disabled={!isCurrentTurn} className="angle-btn medium">-15°</button>
                 <button onClick={() => handleAngleChange(-5)} disabled={!isCurrentTurn}>-5°</button>
                 <button onClick={() => handleAngleChange(-1)} disabled={!isCurrentTurn}>-1°</button>
                 <button onClick={() => handleAngleChange(1)} disabled={!isCurrentTurn}>+1°</button>
                 <button onClick={() => handleAngleChange(5)} disabled={!isCurrentTurn}>+5°</button>
+                <button onClick={() => handleAngleChange(15)} disabled={!isCurrentTurn} className="angle-btn medium">+15°</button>
+                <button onClick={() => handleAngleChange(45)} disabled={!isCurrentTurn} className="angle-btn large">+45°</button>
               </div>
             </div>
 

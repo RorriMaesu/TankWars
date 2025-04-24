@@ -26,7 +26,9 @@
 
 .button-group {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  justify-content: center;
 }
 
 .button-group button {
@@ -37,15 +39,38 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  min-width: 40px;
+}
+
+.button-group button.angle-btn.large {
+  background-color: #1d4ed8;
+  font-weight: bold;
+  flex: 2;
+}
+
+.button-group button.angle-btn.medium {
+  background-color: #2563eb;
+  flex: 1.5;
 }
 
 .button-group button:hover {
   background-color: #2563eb;
+  transform: scale(1.05);
+  transition: transform 0.1s ease;
+}
+
+.button-group button.angle-btn.large:hover {
+  background-color: #1e40af;
+}
+
+.button-group button.angle-btn.medium:hover {
+  background-color: #1d4ed8;
 }
 
 .button-group button:disabled {
   background-color: #4b5563;
   cursor: not-allowed;
+  transform: none;
 }
 
 .weapon-select {
@@ -257,14 +282,43 @@
   font-size: 0.85rem;
   font-style: italic;
   color: #f59e0b;
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  background-color: rgba(245, 158, 11, 0.1);
 }
 
-/* Negative angle hint - for high aiming */
-.angle-hint:contains("-30°") {
-  color: #22c55e;
+/* Direction-based colors for angle hints */
+.angle-hint:contains("right") {
+  color: #3b82f6; /* Blue for right */
 }
 
-/* High angle hint - for low aiming */
-.angle-hint:contains("90°") {
-  color: #ef4444;
+.angle-hint:contains("left") {
+  color: #ef4444; /* Red for left */
+}
+
+.angle-hint:contains("up") {
+  color: #22c55e; /* Green for up */
+}
+
+.angle-hint:contains("down") {
+  color: #a855f7; /* Purple for down */
+}
+
+/* Combined directions */
+.angle-hint:contains("up-right") {
+  color: #10b981; /* Teal for up-right */
+}
+
+.angle-hint:contains("up-left") {
+  color: #f97316; /* Orange for up-left */
+}
+
+.angle-hint:contains("down-right") {
+  color: #6366f1; /* Indigo for down-right */
+}
+
+.angle-hint:contains("down-left") {
+  color: #ec4899; /* Pink for down-left */
 }

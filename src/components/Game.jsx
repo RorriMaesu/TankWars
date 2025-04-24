@@ -254,14 +254,14 @@ function Game({ user }) {
       if (index % 2 === 0) {
         // Left side - position at 1/5 of the screen width
         x = Math.floor(150 + (Math.random() * 50));
-        // Left side tank faces right (angle between 20 and 45 degrees)
-        // In classic Tank Wars, the angle is measured from horizontal
-        initialAngle = 20 + Math.floor(Math.random() * 25);
+        // Left side tank faces right - in classic Tank Wars, 45 degrees is a common starting angle
+        // This gives a good balance between distance and height
+        initialAngle = 30; // Fixed angle for consistency and better aiming
       } else {
         // Right side - position at 4/5 of the screen width
         x = Math.floor(600 + (Math.random() * 50));
-        // Right side tank faces left (angle between 135 and 160 degrees)
-        initialAngle = 135 + Math.floor(Math.random() * 25);
+        // Right side tank faces left - mirror of the left tank's angle
+        initialAngle = 150; // 180 - 30 = 150 degrees, perfectly mirrored
       }
 
       tankPositions[playerId] = {
@@ -269,8 +269,9 @@ function Game({ user }) {
         name: players[playerId].name,
         x,
         y: 300, // Will be adjusted to terrain
-        angle: initialAngle, // Face toward center with some randomness
+        angle: initialAngle, // Face toward center
         health: 100,
+        power: 50, // Initial power setting
         color: TANK_COLORS[index % TANK_COLORS.length],
         defeated: false
       };

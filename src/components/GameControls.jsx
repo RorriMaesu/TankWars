@@ -49,7 +49,8 @@ const WEAPONS = [
 
 function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameId }) {
   const [angle, setAngle] = useState(45);
-  const [power, setPower] = useState(50);
+  const [power, setPower] = useState(gameState.tanks && gameState.tanks[currentPlayerId] ?
+    gameState.tanks[currentPlayerId].power || 50 : 50);
   const [selectedWeapon, setSelectedWeapon] = useState(WEAPONS[0]);
   const [showWeaponMenu, setShowWeaponMenu] = useState(false);
   const [weapons, setWeapons] = useState(WEAPONS.map(w => ({ ...w })));
@@ -60,11 +61,17 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
       setWeapons(WEAPONS.map(w => ({ ...w })));
     }
 
+    // Update power from tank data if it exists
+    if (gameState.tanks && gameState.tanks[currentPlayerId] &&
+        gameState.tanks[currentPlayerId].power !== undefined) {
+      setPower(gameState.tanks[currentPlayerId].power);
+    }
+
     // Log current turn and player status for debugging
     console.log('GameControls - Current turn:', gameState.currentTurn);
     console.log('GameControls - Is current player turn:', isCurrentTurn);
     console.log('GameControls - Projectile active:', gameState.projectile?.active);
-  }, [gameState, isCurrentTurn]);
+  }, [gameState, isCurrentTurn, currentPlayerId]);
 
   // Handle angle change
   const handleAngleChange = (increment) => {
@@ -110,8 +117,16 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
   // Handle power change
   const handlePowerChange = (increment) => {
     setPower(prev => {
-      const newPower = prev + increment;
-      return Math.max(10, Math.min(100, newPower));
+      const newPower = Math.max(10, Math.min(100, prev + increment));
+
+      // Update the tank's power in the database
+      // This will be used for the visual power indicator
+      if (gameId && currentPlayerId) {
+        const tankRef = ref(database, `games/${gameId}/tanks/${currentPlayerId}`);
+        update(tankRef, { power: newPower });
+      }
+
+      return newPower;
     });
   };
 
@@ -125,12 +140,15 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
   const handleFire = () => {
     if (!isCurrentTurn) return;
 
-    // Calculate initial velocity
-    const { velocityX, velocityY } = calculateInitialVelocity(angle, power);
-
-    // Get current tank position
+    // Get current tank position and angle
     const currentTank = gameState.tanks[currentPlayerId];
     if (!currentTank) return;
+
+    // Use the tank's actual angle for velocity calculation, not the UI angle
+    const tankAngle = currentTank.angle;
+
+    // Calculate initial velocity using the tank's angle
+    const { velocityX, velocityY } = calculateInitialVelocity(tankAngle, power);
 
     // Calculate projectile starting position from the end of the barrel
     const TANK_WIDTH = 40; // Match the constant in GameCanvas
@@ -224,6 +242,9 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
     );
   };
 
+  // Get the current tank for UI display
+  const currentTank = gameState.tanks ? gameState.tanks[currentPlayerId] : null;
+
   return (
     <div className="game-controls">
       {showWeaponMenu ? (
@@ -232,7 +253,7 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
         <>
           <div className="control-panel">
             <div className="control-group">
-              <label>Angle: {angle}°</label>
+              <label>Angle: {angle}° {currentTank && currentTank.x > CANVAS_WIDTH / 2 ? `(${180-angle}° actual)` : ''}</label>
               <div className="button-group">
                 <button onClick={() => handleAngleChange(-5)} disabled={!isCurrentTurn}>-5°</button>
                 <button onClick={() => handleAngleChange(-1)} disabled={!isCurrentTurn}>-1°</button>

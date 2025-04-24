@@ -324,6 +324,40 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
     ctx.fillStyle = '#333';
     ctx.fillRect(0, -2, TANK_BARREL_LENGTH, 4);
 
+    // Draw aiming trajectory line if this is the current player's turn
+    if (isCurrentPlayer && tank.id === gameState.currentTurn) {
+      // Get the current power setting from the tank if available
+      const power = tank.power || 50; // Default to 50 if not set
+
+      // Calculate trajectory length based on power (longer line for more power)
+      const trajectoryLength = 40 + (power / 2); // Scale from 40 to 90 based on power (10-100)
+
+      // Draw dotted trajectory line
+      ctx.setLineDash([3, 3]); // Create dotted line
+      ctx.strokeStyle = '#ffff00'; // Yellow
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(TANK_BARREL_LENGTH, 0);
+      ctx.lineTo(trajectoryLength, 0);
+      ctx.stroke();
+      ctx.setLineDash([]); // Reset to solid line
+
+      // Draw small circle at the end of the trajectory
+      ctx.fillStyle = '#ffff00';
+      ctx.beginPath();
+      ctx.arc(trajectoryLength, 0, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw power indicator text
+      ctx.save();
+      ctx.rotate(-angle * Math.PI / 180); // Rotate back to normal orientation for text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Power: ${power}%`, 0, -15);
+      ctx.restore();
+    }
+
     // Highlight current player's tank
     if (isCurrentPlayer) {
       ctx.strokeStyle = '#ffffff';

@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "deploy:script": "node scripts/deploy.js",
+    "predeploy": "npm run build && cp public/tank-icon.svg public/404.html public/.nojekyll public/robots.txt public/sitemap.xml public/manifest.json dist/"
   },
   "dependencies": {
     "firebase": "^10.7.0",

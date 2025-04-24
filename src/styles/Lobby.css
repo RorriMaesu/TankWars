@@ -21,12 +21,42 @@
 }
 
 .create-game {
-  display: flex;
-  gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.create-game input {
+.game-type-selector {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.game-type-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background-color: #2a2a2a;
+  color: white;
+  border: 1px solid #333;
+  cursor: pointer;
+}
+
+.game-type-btn:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.game-type-btn:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.game-type-btn.active {
+  background-color: #646cff;
+  border-color: #646cff;
+}
+
+.game-form {
+  display: flex;
+  gap: 1rem;
+}
+
+.game-form input {
   flex: 1;
   padding: 0.75rem;
   border-radius: 4px;
@@ -35,19 +65,53 @@
   color: white;
 }
 
-.create-game button {
+.game-form button {
   background-color: #646cff;
   color: white;
   border: none;
+  border-radius: 4px;
+  padding: 0 1rem;
 }
 
-.create-game button:hover {
+.game-form button:hover {
   background-color: #535bf2;
+}
+
+.games-tabs {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background-color: #2a2a2a;
+  color: white;
+  border: 1px solid #333;
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.tab-btn:first-child {
+  border-radius: 4px 0 0 0;
+}
+
+.tab-btn:last-child {
+  border-radius: 0 4px 0 0;
+}
+
+.tab-btn.active {
+  background-color: #1a1a1a;
+  border-color: #333;
+  border-bottom: 1px solid #1a1a1a;
+  margin-bottom: -1px;
+  position: relative;
+  z-index: 1;
 }
 
 .games-list {
   border: 1px solid #333;
-  border-radius: 8px;
+  border-radius: 0 0 8px 8px;
   padding: 1.5rem;
   background-color: #1a1a1a;
 }

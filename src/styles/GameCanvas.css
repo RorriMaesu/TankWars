@@ -1,0 +1,15 @@
+.game-canvas {
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #333;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #1e293b;
+}
+
+@media (max-width: 840px) {
+  .game-canvas {
+    width: 100%;
+    height: auto;
+  }
+}

@@ -1,0 +1,209 @@
+.game-controls {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.control-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.control-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button-group button {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button-group button:hover {
+  background-color: #2563eb;
+}
+
+.button-group button:disabled {
+  background-color: #4b5563;
+  cursor: not-allowed;
+}
+
+.weapon-select {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #4b5563;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.weapon-select:hover {
+  background-color: #374151;
+}
+
+.weapon-select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fire-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.fire-button:hover {
+  background-color: #b91c1c;
+}
+
+.fire-button:disabled {
+  background-color: #4b5563;
+  cursor: not-allowed;
+}
+
+.player-info {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.player-status {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+}
+
+.player-status.current-player {
+  border: 2px solid #3b82f6;
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.player-health {
+  position: relative;
+  height: 20px;
+  background-color: #4b5563;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.health-bar {
+  height: 100%;
+  background-color: #22c55e;
+  transition: width 0.3s ease;
+}
+
+.player-health span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Weapon Menu */
+.weapon-menu {
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.weapon-menu h3 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.weapon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.weapon-item {
+  padding: 1rem;
+  background-color: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.weapon-item:hover {
+  background-color: #374151;
+}
+
+.weapon-item.selected {
+  border-color: #3b82f6;
+  background-color: #1e3a8a;
+}
+
+.weapon-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weapon-name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.weapon-count {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.close-menu {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #4b5563;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.close-menu:hover {
+  background-color: #374151;
+}

@@ -5,6 +5,7 @@ import { auth } from './firebase'
 import Login from './components/Login'
 import Lobby from './components/Lobby'
 import Game from './components/Game'
+import ClassicGame from './components/ClassicGame'
 import Debug from './components/Debug'
 import './styles/App.css'
 
@@ -65,6 +66,10 @@ function App() {
         <Route
           path="/game/:gameId"
           element={user ? <Game user={user} /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/classic/:gameId"
+          element={user ? <ClassicGame user={user} /> : <Navigate to="/" />}
         />
       </Routes>
 

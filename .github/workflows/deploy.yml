@@ -1,9 +1,8 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages (Legacy)
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    # This workflow is now manual-only to avoid conflicts with pages.yml
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:

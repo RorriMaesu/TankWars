@@ -32,7 +32,7 @@
     <!-- Script tag for development - will be replaced by Vite during build -->
     <script type="module" src="./src/main.jsx"></script>
 
-    <!-- Direct script loading for GitHub Pages -->
+    <!-- Direct script loading for GitHub Pages with fallbacks -->
     <script>
       // Check if we're in production (GitHub Pages)
       if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
@@ -47,17 +47,70 @@
         // Get the base URL for the site
         const baseUrl = document.querySelector('base')?.href || '/TankWars/';
 
-        // Create a regular script tag for the main bundle
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = baseUrl + 'assets/index.js';
-        document.body.appendChild(script);
+        // Function to load script with fallbacks
+        function loadScriptWithFallbacks(paths, index = 0) {
+          if (index >= paths.length) {
+            console.error('All script loading attempts failed');
+            document.body.innerHTML = `
+              <div style="text-align: center; padding: 2rem; font-family: sans-serif;">
+                <h1>Loading Error</h1>
+                <p>Failed to load the application. Please try refreshing the page.</p>
+                <button onclick="window.location.reload()" style="padding: 0.5rem 1rem; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  Refresh Page
+                </button>
+              </div>
+            `;
+            return;
+          }
 
-        // Also load the CSS directly
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = baseUrl + 'assets/index.css';
-        document.head.appendChild(link);
+          const script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.src = baseUrl + paths[index];
+
+          script.onerror = () => {
+            console.warn(`Failed to load script from ${paths[index]}, trying next fallback...`);
+            loadScriptWithFallbacks(paths, index + 1);
+          };
+
+          document.body.appendChild(script);
+          console.log(`Attempting to load script: ${script.src}`);
+        }
+
+        // Function to load CSS with fallbacks
+        function loadCSSWithFallbacks(paths, index = 0) {
+          if (index >= paths.length) {
+            console.warn('All CSS loading attempts failed');
+            return;
+          }
+
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = baseUrl + paths[index];
+
+          link.onerror = () => {
+            console.warn(`Failed to load CSS from ${paths[index]}, trying next fallback...`);
+            loadCSSWithFallbacks(paths, index + 1);
+          };
+
+          document.head.appendChild(link);
+          console.log(`Attempting to load CSS: ${link.href}`);
+        }
+
+        // Try loading scripts with fallbacks
+        loadScriptWithFallbacks([
+          'assets/index.js',
+          'assets/index.VybD6KFz.js', // Try with hash if exists
+          'assets/main.js',
+          'index.js'
+        ]);
+
+        // Try loading CSS with fallbacks
+        loadCSSWithFallbacks([
+          'assets/index.css',
+          'assets/index.CTJpQEUt.css', // Try with hash if exists
+          'assets/style.css',
+          'index.css'
+        ]);
       }
     </script>
   </body>

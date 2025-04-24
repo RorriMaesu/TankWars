@@ -245,3 +245,26 @@
 .close-menu:hover {
   background-color: #374151;
 }
+
+/* Angle display styling */
+.actual-angle {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-left: 0.5rem;
+}
+
+.angle-hint {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #f59e0b;
+}
+
+/* Negative angle hint - for high aiming */
+.angle-hint:contains("-30°") {
+  color: #22c55e;
+}
+
+/* High angle hint - for low aiming */
+.angle-hint:contains("90°") {
+  color: #ef4444;
+}

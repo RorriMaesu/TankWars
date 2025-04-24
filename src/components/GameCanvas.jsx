@@ -321,8 +321,15 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
     // Draw tank barrel
     ctx.translate(x + TANK_WIDTH / 2, tankY + TANK_HEIGHT / 2);
     ctx.rotate((angle * Math.PI) / 180);
-    ctx.fillStyle = '#333';
-    ctx.fillRect(0, -2, TANK_BARREL_LENGTH, 4);
+
+    // Draw barrel with gradient for better visibility
+    const barrelGradient = ctx.createLinearGradient(0, 0, TANK_BARREL_LENGTH, 0);
+    barrelGradient.addColorStop(0, '#333');
+    barrelGradient.addColorStop(1, '#555');
+    ctx.fillStyle = barrelGradient;
+
+    // Make barrel slightly thicker for better visibility
+    ctx.fillRect(0, -3, TANK_BARREL_LENGTH, 6);
 
     // Draw aiming trajectory line if this is the current player's turn
     if (isCurrentPlayer && tank.id === gameState.currentTurn) {
@@ -332,10 +339,16 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
       // Calculate trajectory length based on power (longer line for more power)
       const trajectoryLength = 40 + (power / 2); // Scale from 40 to 90 based on power (10-100)
 
+      // Draw improved trajectory line
+      // Create a gradient for the trajectory line
+      const trajectoryGradient = ctx.createLinearGradient(TANK_BARREL_LENGTH, 0, trajectoryLength, 0);
+      trajectoryGradient.addColorStop(0, 'rgba(255, 255, 0, 0.9)'); // Bright yellow at start
+      trajectoryGradient.addColorStop(1, 'rgba(255, 255, 0, 0.3)'); // Faded yellow at end
+
       // Draw dotted trajectory line
       ctx.setLineDash([3, 3]); // Create dotted line
-      ctx.strokeStyle = '#ffff00'; // Yellow
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = trajectoryGradient;
+      ctx.lineWidth = 2; // Slightly thicker line
       ctx.beginPath();
       ctx.moveTo(TANK_BARREL_LENGTH, 0);
       ctx.lineTo(trajectoryLength, 0);
@@ -345,7 +358,13 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
       // Draw small circle at the end of the trajectory
       ctx.fillStyle = '#ffff00';
       ctx.beginPath();
-      ctx.arc(trajectoryLength, 0, 3, 0, Math.PI * 2);
+      ctx.arc(trajectoryLength, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Add a glow effect to the end point
+      ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+      ctx.beginPath();
+      ctx.arc(trajectoryLength, 0, 7, 0, Math.PI * 2);
       ctx.fill();
 
       // Draw power indicator text

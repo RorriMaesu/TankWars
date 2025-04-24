@@ -87,10 +87,11 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
       // Check if this is a left or right tank based on position
       const isLeftTank = currentTank.x < CANVAS_WIDTH / 2;
 
-      // Apply appropriate angle limits
+      // Apply expanded angle limits to allow for higher aiming
       if (isLeftTank) {
-        // Left tank: 0 to 90 degrees (facing right)
-        const limitedAngle = Math.max(0, Math.min(90, newAngle));
+        // Left tank: -30 to 90 degrees (facing right)
+        // Negative angles allow aiming higher (more upward)
+        const limitedAngle = Math.max(-30, Math.min(90, newAngle));
 
         // Update the tank's angle in the database to match the firing angle
         // This will rotate the tank barrel
@@ -99,17 +100,18 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
 
         return limitedAngle;
       } else {
-        // Right tank: 90 to 180 degrees (facing left)
-        // Convert the input angle (0-90) to the appropriate range (180-90)
+        // Right tank: 90 to 210 degrees (facing left)
+        // Angles > 180 allow aiming higher (more upward)
+        // Convert the input angle (-30 to 90) to the appropriate range (210-90)
         const actualAngle = 180 - newAngle;
-        const limitedAngle = Math.max(90, Math.min(180, actualAngle));
+        const limitedAngle = Math.max(90, Math.min(210, actualAngle));
 
         // Update the tank's angle in the database
         const tankRef = ref(database, `games/${gameId}/tanks/${currentPlayerId}`);
         update(tankRef, { angle: limitedAngle });
 
-        // Return the UI angle (0-90)
-        return Math.max(0, Math.min(90, newAngle));
+        // Return the UI angle (-30 to 90)
+        return Math.max(-30, Math.min(90, newAngle));
       }
     });
   };
@@ -252,7 +254,19 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
         <>
           <div className="control-panel">
             <div className="control-group">
-              <label>Angle: {angle}° {currentTank && currentTank.x > CANVAS_WIDTH / 2 ? `(${180-angle}° actual)` : ''}</label>
+              <label>
+                Angle: {angle}°
+                {currentTank && currentTank.x > CANVAS_WIDTH / 2 ?
+                  <span className="actual-angle">(Actual: {180-angle}°)</span> :
+                  ''
+                }
+                {angle < 0 ?
+                  <span className="angle-hint"> - Aiming higher</span> :
+                  angle > 75 ?
+                  <span className="angle-hint"> - Aiming lower</span> :
+                  ''
+                }
+              </label>
               <div className="button-group">
                 <button onClick={() => handleAngleChange(-5)} disabled={!isCurrentTurn}>-5°</button>
                 <button onClick={() => handleAngleChange(-1)} disabled={!isCurrentTurn}>-1°</button>

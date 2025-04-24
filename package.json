@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/copy-static.js",
+    "build": "vite build && node scripts/copy-public-files.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "deploy": "node scripts/deploy.js",
+    "deploy": "npm run build && npx gh-pages -d dist",
     "manual-deploy": "node scripts/manual-deploy.js",
     "copy-static": "node scripts/copy-static.js"
   },

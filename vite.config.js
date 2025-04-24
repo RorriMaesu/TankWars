@@ -9,10 +9,10 @@ export default defineConfig({
   // Static build configuration for GitHub Pages
   build: {
     outDir: 'dist',
-    // Disable code splitting for a single bundle
+    // Ensure our compiled assets use predictable filenames
     rollupOptions: {
       output: {
-        // Use predictable filenames without hashes
+        // Use consistent filenames
         entryFileNames: 'assets/app.js',
         chunkFileNames: 'assets/[name].js',
         assetFileNames: 'assets/[name].[ext]',

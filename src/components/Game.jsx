@@ -1,50 +1,27 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ref,
-  onValue,
-  update,
-  remove,
-  onDisconnect,
-  set
-} from 'firebase/database';
+import { ref, onValue, update, remove, onDisconnect, set } from 'firebase/database';
 import { database } from '../firebase';
-import Tank from './Tank';
-import Projectile from './Projectile';
+import GameCanvas from './GameCanvas';
+import GameControls from './GameControls';
 import '../styles/Game.css';
 
 // Tank colors
-const TANK_COLORS = ['red', 'blue', 'green', 'yellow'];
-
-// Game constants
-const GAME_WIDTH = 800;
-const GAME_HEIGHT = 600;
-const TANK_SPEED = 3;
-const ROTATION_SPEED = 3;
-const PROJECTILE_SPEED = 7;
-const FIRE_COOLDOWN = 500; // ms
-const TANK_SIZE = 40;
-const PROJECTILE_SIZE = 6;
+const TANK_COLORS = ['#e11d48', '#2563eb', '#16a34a', '#ca8a04'];
 
 function Game({ user }) {
   const { gameId } = useParams();
   const navigate = useNavigate();
   const [game, setGame] = useState(null);
   const [players, setPlayers] = useState({});
-  const [tanks, setTanks] = useState({});
-  const [projectiles, setProjectiles] = useState({});
-  const [gameStarted, setGameStarted] = useState(false);
-  const [error, setError] = useState('');
-  const [keys, setKeys] = useState({
-    up: false,
-    down: false,
-    left: false,
-    right: false,
-    space: false
+  const [gameState, setGameState] = useState({
+    status: 'waiting',
+    tanks: {},
+    projectile: null,
+    currentTurn: null,
+    weaponsInitialized: false
   });
-  const lastFireTime = useRef(0);
-  const gameLoopRef = useRef(null);
-  const gameRef = useRef(null);
+  const [error, setError] = useState('');
 
   // Initialize game and set up listeners
   useEffect(() => {
@@ -52,6 +29,7 @@ function Game({ user }) {
     const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
     let playersUnsubscribe;
 
+    // Main game data listener
     const gameUnsubscribe = onValue(gameDbRef, (snapshot) => {
       const gameData = snapshot.val();
 
@@ -60,11 +38,23 @@ function Game({ user }) {
         return;
       }
 
+      // Verify this is a valid game
+      if (!gameData.gameType || gameData.gameType !== 'classic') {
+        setError('Invalid game type');
+        return;
+      }
+
       setGame(gameData);
       setPlayers(gameData.players || {});
-      setTanks(gameData.tanks || {});
-      setProjectiles(gameData.projectiles || {});
-      setGameStarted(gameData.status === 'playing');
+
+      // Update game state
+      setGameState({
+        status: gameData.status || 'waiting',
+        tanks: gameData.tanks || {},
+        projectile: gameData.projectile || null,
+        currentTurn: gameData.currentTurn || null,
+        weaponsInitialized: gameData.weaponsInitialized || false
+      });
     });
 
     // Set up a separate listener for players to detect when all players have left
@@ -81,12 +71,10 @@ function Game({ user }) {
     // Set up disconnect handler to remove player from game when they disconnect
     onDisconnect(playerRef).remove();
 
+    // Clean up listeners when component unmounts
     return () => {
       gameUnsubscribe();
       if (playersUnsubscribe) playersUnsubscribe();
-      if (gameLoopRef.current) {
-        cancelAnimationFrame(gameLoopRef.current);
-      }
 
       // Also remove the player from the game when they leave the page
       remove(playerRef).then(() => {
@@ -97,211 +85,114 @@ function Game({ user }) {
     };
   }, [gameId, user.uid]);
 
-  // Set up keyboard event listeners
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowUp' || e.key === 'w') {
-        setKeys(prev => ({ ...prev, up: true }));
-      } else if (e.key === 'ArrowDown' || e.key === 's') {
-        setKeys(prev => ({ ...prev, down: true }));
-      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
-        setKeys(prev => ({ ...prev, left: true }));
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        setKeys(prev => ({ ...prev, right: true }));
-      } else if (e.key === ' ') {
-        setKeys(prev => ({ ...prev, space: true }));
-      }
-    };
+  // Handle game events
+  const handleGameEvent = (eventType, data) => {
+    const gameRef = ref(database, `games/${gameId}`);
 
-    const handleKeyUp = (e) => {
-      if (e.key === 'ArrowUp' || e.key === 'w') {
-        setKeys(prev => ({ ...prev, up: false }));
-      } else if (e.key === 'ArrowDown' || e.key === 's') {
-        setKeys(prev => ({ ...prev, down: false }));
-      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
-        setKeys(prev => ({ ...prev, left: false }));
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        setKeys(prev => ({ ...prev, right: false }));
-      } else if (e.key === ' ') {
-        setKeys(prev => ({ ...prev, space: false }));
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
-  // Game loop
-  useEffect(() => {
-    if (!gameStarted || !tanks[user.uid]) return;
-
-    const gameLoop = () => {
-      // Handle tank movement and rotation
-      const tank = tanks[user.uid];
-      let updatedTank = { ...tank };
-      let tankUpdated = false;
-
-      if (keys.left) {
-        updatedTank.angle = (updatedTank.angle - ROTATION_SPEED) % 360;
-        tankUpdated = true;
-      }
-
-      if (keys.right) {
-        updatedTank.angle = (updatedTank.angle + ROTATION_SPEED) % 360;
-        tankUpdated = true;
-      }
-
-      const radians = updatedTank.angle * (Math.PI / 180);
-
-      if (keys.up) {
-        updatedTank.x += Math.sin(radians) * TANK_SPEED;
-        updatedTank.y -= Math.cos(radians) * TANK_SPEED;
-        tankUpdated = true;
-      }
-
-      if (keys.down) {
-        updatedTank.x -= Math.sin(radians) * TANK_SPEED;
-        updatedTank.y += Math.cos(radians) * TANK_SPEED;
-        tankUpdated = true;
-      }
-
-      // Keep tank within bounds
-      if (updatedTank.x < 0) updatedTank.x = 0;
-      if (updatedTank.x > GAME_WIDTH - TANK_SIZE) updatedTank.x = GAME_WIDTH - TANK_SIZE;
-      if (updatedTank.y < 0) updatedTank.y = 0;
-      if (updatedTank.y > GAME_HEIGHT - TANK_SIZE) updatedTank.y = GAME_HEIGHT - TANK_SIZE;
-
-      // Update tank in Firebase if it moved
-      if (tankUpdated) {
-        const tankRef = ref(database, `games/${gameId}/tanks/${user.uid}`);
-        update(tankRef, {
-          x: updatedTank.x,
-          y: updatedTank.y,
-          angle: updatedTank.angle
+    switch (eventType) {
+      case 'fire':
+        // Fire a projectile
+        update(gameRef, {
+          projectile: data
         });
-      }
+        break;
 
-      // Handle firing
-      if (keys.space) {
-        const now = Date.now();
-        if (now - lastFireTime.current > FIRE_COOLDOWN) {
-          lastFireTime.current = now;
+      case 'updateProjectile':
+        // Update projectile position
+        update(gameRef, {
+          'projectile': data
+        });
+        break;
 
-          // Create new projectile
-          const projectileRef = ref(database, `games/${gameId}/projectiles/${user.uid}_${now}`);
-          const projectile = {
-            id: `${user.uid}_${now}`,
-            ownerId: user.uid,
-            x: updatedTank.x + TANK_SIZE / 2,
-            y: updatedTank.y + TANK_SIZE / 2,
-            angle: updatedTank.angle,
-            createdAt: now
-          };
+      case 'endProjectile':
+        // End projectile animation by updating the entire projectile object
+        // Get the current projectile
+        const currentProjectile = { ...gameState.projectile };
+        if (currentProjectile) {
+          // Set active to false
+          currentProjectile.active = false;
 
-          set(projectileRef, projectile);
+          // Update the entire projectile object
+          update(gameRef, {
+            projectile: currentProjectile
+          });
+
+          console.log('Ending projectile - Updated projectile:', currentProjectile);
+        } else {
+          console.warn('Cannot end projectile - No active projectile found');
         }
-      }
+        break;
 
-      gameLoopRef.current = requestAnimationFrame(gameLoop);
-    };
+      case 'damagePlayer':
+        // Apply damage to a player
+        const { playerId, damage } = data;
+        const currentHealth = gameState.tanks[playerId]?.health || 100;
+        const newHealth = Math.max(0, currentHealth - damage);
 
-    gameLoopRef.current = requestAnimationFrame(gameLoop);
+        update(ref(database, `games/${gameId}/tanks/${playerId}`), {
+          health: newHealth
+        });
 
-    return () => {
-      if (gameLoopRef.current) {
-        cancelAnimationFrame(gameLoopRef.current);
-      }
-    };
-  }, [gameId, gameStarted, keys, tanks, user.uid]);
+        // Check if player is defeated
+        if (newHealth <= 0) {
+          // Handle player defeat
+          update(ref(database, `games/${gameId}/tanks/${playerId}`), {
+            defeated: true
+          });
 
-  // Handle projectile movement and collisions
-  useEffect(() => {
-    if (!gameStarted) return;
+          // Check if game is over
+          const remainingPlayers = Object.values(gameState.tanks).filter(
+            tank => tank.id !== playerId && !tank.defeated
+          );
 
-    const projectileInterval = setInterval(() => {
-      const now = Date.now();
-      const updatedProjectiles = { ...projectiles };
-      let projectilesUpdated = false;
-
-      // Update projectile positions and check for collisions
-      Object.values(updatedProjectiles).forEach(projectile => {
-        // Remove old projectiles (older than 5 seconds)
-        if (now - projectile.createdAt > 5000) {
-          delete updatedProjectiles[projectile.id];
-          projectilesUpdated = true;
-          return;
-        }
-
-        // Update position
-        const radians = projectile.angle * (Math.PI / 180);
-        projectile.x += Math.sin(radians) * PROJECTILE_SPEED;
-        projectile.y -= Math.cos(radians) * PROJECTILE_SPEED;
-        projectilesUpdated = true;
-
-        // Check if out of bounds
-        if (
-          projectile.x < 0 ||
-          projectile.x > GAME_WIDTH ||
-          projectile.y < 0 ||
-          projectile.y > GAME_HEIGHT
-        ) {
-          delete updatedProjectiles[projectile.id];
-          return;
-        }
-
-        // Check for collisions with tanks
-        Object.values(tanks).forEach(tank => {
-          // Don't collide with own tank
-          if (tank.id === projectile.ownerId) return;
-
-          // Simple collision detection
-          const dx = projectile.x - (tank.x + TANK_SIZE / 2);
-          const dy = projectile.y - (tank.y + TANK_SIZE / 2);
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < (TANK_SIZE / 2 + PROJECTILE_SIZE / 2)) {
-            // Hit detected
-            delete updatedProjectiles[projectile.id];
-
-            // Update tank health
-            const tankRef = ref(database, `games/${gameId}/tanks/${tank.id}`);
-            update(tankRef, {
-              health: Math.max(0, tank.health - 10)
+          if (remainingPlayers.length <= 1) {
+            // Game over - we have a winner
+            update(gameRef, {
+              status: 'completed',
+              winner: remainingPlayers[0]?.id || null,
+              endedAt: Date.now()
             });
-
-            // Check if tank is destroyed
-            if (tank.health <= 10) {
-              // Respawn tank after 3 seconds
-              setTimeout(() => {
-                const respawnX = Math.random() * (GAME_WIDTH - TANK_SIZE);
-                const respawnY = Math.random() * (GAME_HEIGHT - TANK_SIZE);
-
-                update(tankRef, {
-                  x: respawnX,
-                  y: respawnY,
-                  health: 100
-                });
-              }, 3000);
-            }
           }
+        }
+        break;
+
+      case 'nextTurn':
+        // Move to next player's turn
+        const playerIds = Object.keys(gameState.tanks).filter(
+          id => !gameState.tanks[id].defeated
+        );
+
+        if (playerIds.length <= 1) return; // Game over
+
+        // Log for debugging
+        console.log('Next turn - Current turn:', gameState.currentTurn);
+        console.log('Next turn - Active players:', playerIds);
+
+        // Find the current player's index, defaulting to -1 if not found
+        const currentTurnIndex = gameState.currentTurn ? playerIds.indexOf(gameState.currentTurn) : -1;
+        console.log('Next turn - Current turn index:', currentTurnIndex);
+
+        // Calculate the next player's index, ensuring it's valid even if currentTurnIndex is -1
+        const nextTurnIndex = (currentTurnIndex >= 0 && currentTurnIndex < playerIds.length - 1)
+          ? currentTurnIndex + 1
+          : 0;
+        const nextPlayerId = playerIds[nextTurnIndex];
+
+        console.log('Next turn - Next turn index:', nextTurnIndex);
+        console.log('Next turn - Next player ID:', nextPlayerId);
+
+        // Update the current turn in the database
+        update(gameRef, {
+          currentTurn: nextPlayerId
         });
-      });
+        break;
 
-      // Update projectiles in Firebase
-      if (projectilesUpdated) {
-        const projectilesRef = ref(database, `games/${gameId}/projectiles`);
-        set(projectilesRef, updatedProjectiles);
-      }
-    }, 33); // ~30fps
+      default:
+        console.warn('Unknown game event:', eventType);
+    }
+  };
 
-    return () => clearInterval(projectileInterval);
-  }, [gameId, gameStarted, projectiles, tanks]);
-
+  // Handle ready status toggle
   const handleToggleReady = () => {
     const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
     update(playerRef, {
@@ -309,6 +200,7 @@ function Game({ user }) {
     });
   };
 
+  // Handle game start
   const handleStartGame = () => {
     // Only the creator can start the game
     if (game.createdBy !== user.uid) return;
@@ -317,53 +209,49 @@ function Game({ user }) {
     const tankPositions = {};
     const playerIds = Object.keys(players);
 
+    // Position tanks on opposite sides
     playerIds.forEach((playerId, index) => {
-      // Position tanks in different corners
-      let x, y;
+      let x;
 
-      switch (index) {
-        case 0: // Top left
-          x = 50;
-          y = 50;
-          break;
-        case 1: // Top right
-          x = GAME_WIDTH - TANK_SIZE - 50;
-          y = 50;
-          break;
-        case 2: // Bottom left
-          x = 50;
-          y = GAME_HEIGHT - TANK_SIZE - 50;
-          break;
-        case 3: // Bottom right
-          x = GAME_WIDTH - TANK_SIZE - 50;
-          y = GAME_HEIGHT - TANK_SIZE - 50;
-          break;
-        default:
-          x = Math.random() * (GAME_WIDTH - TANK_SIZE);
-          y = Math.random() * (GAME_HEIGHT - TANK_SIZE);
+      // Position tanks on left or right side
+      if (index % 2 === 0) {
+        // Left side
+        x = 50 + (index * 20);
+      } else {
+        // Right side
+        x = 750 - (index * 20);
       }
 
       tankPositions[playerId] = {
         id: playerId,
         name: players[playerId].name,
         x,
-        y,
-        angle: 0,
+        y: 300, // Will be adjusted to terrain
+        angle: index % 2 === 0 ? 45 : 135, // Face toward center
         health: 100,
-        color: TANK_COLORS[index % TANK_COLORS.length]
+        color: TANK_COLORS[index % TANK_COLORS.length],
+        defeated: false
       };
     });
 
     // Update game status and add tanks
     const gameRef = ref(database, `games/${gameId}`);
+
+    // Log for debugging
+    console.log('Starting game with players:', playerIds);
+    console.log('First player (will start):', playerIds[0]);
+
     update(gameRef, {
       status: 'playing',
       tanks: tankPositions,
-      projectiles: {},
-      startedAt: Date.now()
+      projectile: null,
+      currentTurn: playerIds[0], // First player starts
+      startedAt: Date.now(),
+      weaponsInitialized: true
     });
   };
 
+  // Handle leaving the game
   const handleLeaveGame = () => {
     // Remove player from game
     const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
@@ -379,14 +267,44 @@ function Game({ user }) {
     navigate('/lobby');
   };
 
+  // Handle firing a projectile
+  const handleFire = (projectile) => {
+    handleGameEvent('fire', projectile);
+  };
+
   // Check if all players are ready
   const allPlayersReady = Object.values(players).every(player => player.isReady);
 
   // Check if current player is the creator
   const isCreator = game?.createdBy === user.uid;
 
+  // Check if it's the current player's turn
+  const isCurrentTurn = gameState.currentTurn === user.uid;
+
+  // Render game over screen
+  const renderGameOver = () => {
+    const winner = gameState.tanks[game.winner];
+
+    return (
+      <div className="game-over">
+        <h2>Game Over</h2>
+        {winner ? (
+          <>
+            <p className="winner-text">{winner.name} wins!</p>
+            <div className="winner-tank" style={{ backgroundColor: winner.color }}></div>
+          </>
+        ) : (
+          <p>It's a draw!</p>
+        )}
+        <button className="return-lobby" onClick={handleLeaveGame}>
+          Return to Lobby
+        </button>
+      </div>
+    );
+  };
+
   return (
-    <div className="game-page">
+    <div className="game">
       {error ? (
         <div className="error-container">
           <p className="error">{error}</p>
@@ -401,7 +319,7 @@ function Game({ user }) {
             </button>
           </div>
 
-          {!gameStarted ? (
+          {gameState.status === 'waiting' ? (
             <div className="waiting-room">
               <h3>Waiting for players</h3>
               <div className="players-list">
@@ -442,26 +360,21 @@ function Game({ user }) {
                 <p className="info-text">Waiting for all players to be ready</p>
               )}
             </div>
+          ) : gameState.status === 'completed' ? (
+            renderGameOver()
           ) : (
-            <div className="game-container" ref={gameRef}>
-              {/* Render tanks */}
-              {Object.values(tanks).map(tank => (
-                <Tank
-                  key={tank.id}
-                  tank={tank}
-                  isCurrentPlayer={tank.id === user.uid}
-                />
-              ))}
-
-              {/* Render projectiles */}
-              {Object.values(projectiles).map(projectile => (
-                <Projectile key={projectile.id} projectile={projectile} />
-              ))}
-
-              <div className="controls-info">
-                <p>Use WASD or Arrow Keys to move</p>
-                <p>Space to fire</p>
-              </div>
+            <div className="game-area">
+              <GameCanvas
+                gameState={gameState}
+                onGameEvent={handleGameEvent}
+                currentPlayerId={user.uid}
+              />
+              <GameControls
+                onFire={handleFire}
+                isCurrentTurn={isCurrentTurn}
+                gameState={gameState}
+                currentPlayerId={user.uid}
+              />
             </div>
           )}
         </>

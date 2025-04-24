@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ref, 
-  onValue, 
-  update, 
-  remove, 
-  onDisconnect, 
-  set 
+import {
+  ref,
+  onValue,
+  update,
+  remove,
+  onDisconnect,
+  set
 } from 'firebase/database';
 import { database } from '../firebase';
 import Tank from './Tank';
@@ -49,15 +49,17 @@ function Game({ user }) {
   // Initialize game and set up listeners
   useEffect(() => {
     const gameDbRef = ref(database, `games/${gameId}`);
-    
-    const unsubscribe = onValue(gameDbRef, (snapshot) => {
+    const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
+    let playersUnsubscribe;
+
+    const gameUnsubscribe = onValue(gameDbRef, (snapshot) => {
       const gameData = snapshot.val();
-      
+
       if (!gameData) {
         setError('Game not found');
         return;
       }
-      
+
       setGame(gameData);
       setPlayers(gameData.players || {});
       setTanks(gameData.tanks || {});
@@ -65,15 +67,33 @@ function Game({ user }) {
       setGameStarted(gameData.status === 'playing');
     });
 
-    // Set up disconnect handler to remove player from game
-    const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
+    // Set up a separate listener for players to detect when all players have left
+    playersUnsubscribe = onValue(ref(database, `games/${gameId}/players`), (snapshot) => {
+      const playersData = snapshot.val();
+
+      // If there are no players left in the game, delete the game
+      if (!playersData || Object.keys(playersData).length === 0) {
+        console.log('No players left in game, deleting game room');
+        remove(gameDbRef);
+      }
+    });
+
+    // Set up disconnect handler to remove player from game when they disconnect
     onDisconnect(playerRef).remove();
 
     return () => {
-      unsubscribe();
+      gameUnsubscribe();
+      if (playersUnsubscribe) playersUnsubscribe();
       if (gameLoopRef.current) {
         cancelAnimationFrame(gameLoopRef.current);
       }
+
+      // Also remove the player from the game when they leave the page
+      remove(playerRef).then(() => {
+        console.log('Player removed from game on component unmount');
+      }).catch(error => {
+        console.error('Error removing player from game:', error);
+      });
     };
   }, [gameId, user.uid]);
 
@@ -130,20 +150,20 @@ function Game({ user }) {
         updatedTank.angle = (updatedTank.angle - ROTATION_SPEED) % 360;
         tankUpdated = true;
       }
-      
+
       if (keys.right) {
         updatedTank.angle = (updatedTank.angle + ROTATION_SPEED) % 360;
         tankUpdated = true;
       }
 
       const radians = updatedTank.angle * (Math.PI / 180);
-      
+
       if (keys.up) {
         updatedTank.x += Math.sin(radians) * TANK_SPEED;
         updatedTank.y -= Math.cos(radians) * TANK_SPEED;
         tankUpdated = true;
       }
-      
+
       if (keys.down) {
         updatedTank.x -= Math.sin(radians) * TANK_SPEED;
         updatedTank.y += Math.cos(radians) * TANK_SPEED;
@@ -171,7 +191,7 @@ function Game({ user }) {
         const now = Date.now();
         if (now - lastFireTime.current > FIRE_COOLDOWN) {
           lastFireTime.current = now;
-          
+
           // Create new projectile
           const projectileRef = ref(database, `games/${gameId}/projectiles/${user.uid}_${now}`);
           const projectile = {
@@ -182,7 +202,7 @@ function Game({ user }) {
             angle: updatedTank.angle,
             createdAt: now
           };
-          
+
           set(projectileRef, projectile);
         }
       }
@@ -225,9 +245,9 @@ function Game({ user }) {
 
         // Check if out of bounds
         if (
-          projectile.x < 0 || 
-          projectile.x > GAME_WIDTH || 
-          projectile.y < 0 || 
+          projectile.x < 0 ||
+          projectile.x > GAME_WIDTH ||
+          projectile.y < 0 ||
           projectile.y > GAME_HEIGHT
         ) {
           delete updatedProjectiles[projectile.id];
@@ -247,7 +267,7 @@ function Game({ user }) {
           if (distance < (TANK_SIZE / 2 + PROJECTILE_SIZE / 2)) {
             // Hit detected
             delete updatedProjectiles[projectile.id];
-            
+
             // Update tank health
             const tankRef = ref(database, `games/${gameId}/tanks/${tank.id}`);
             update(tankRef, {
@@ -260,7 +280,7 @@ function Game({ user }) {
               setTimeout(() => {
                 const respawnX = Math.random() * (GAME_WIDTH - TANK_SIZE);
                 const respawnY = Math.random() * (GAME_HEIGHT - TANK_SIZE);
-                
+
                 update(tankRef, {
                   x: respawnX,
                   y: respawnY,
@@ -296,11 +316,11 @@ function Game({ user }) {
     // Initialize tank positions
     const tankPositions = {};
     const playerIds = Object.keys(players);
-    
+
     playerIds.forEach((playerId, index) => {
       // Position tanks in different corners
       let x, y;
-      
+
       switch (index) {
         case 0: // Top left
           x = 50;
@@ -361,7 +381,7 @@ function Game({ user }) {
 
   // Check if all players are ready
   const allPlayersReady = Object.values(players).every(player => player.isReady);
-  
+
   // Check if current player is the creator
   const isCreator = game?.createdBy === user.uid;
 
@@ -394,17 +414,17 @@ function Game({ user }) {
                   </div>
                 ))}
               </div>
-              
+
               <div className="game-controls">
-                <button 
+                <button
                   className={`ready-btn ${players[user.uid]?.isReady ? 'ready' : ''}`}
                   onClick={handleToggleReady}
                 >
                   {players[user.uid]?.isReady ? 'Ready!' : 'Mark as Ready'}
                 </button>
-                
+
                 {isCreator && (
-                  <button 
+                  <button
                     className="start-btn"
                     disabled={!allPlayersReady || Object.keys(players).length < 2}
                     onClick={handleStartGame}
@@ -413,11 +433,11 @@ function Game({ user }) {
                   </button>
                 )}
               </div>
-              
+
               {isCreator && Object.keys(players).length < 2 && (
                 <p className="info-text">Need at least 2 players to start</p>
               )}
-              
+
               {isCreator && !allPlayersReady && Object.keys(players).length >= 2 && (
                 <p className="info-text">Waiting for all players to be ready</p>
               )}
@@ -426,18 +446,18 @@ function Game({ user }) {
             <div className="game-container" ref={gameRef}>
               {/* Render tanks */}
               {Object.values(tanks).map(tank => (
-                <Tank 
-                  key={tank.id} 
-                  tank={tank} 
-                  isCurrentPlayer={tank.id === user.uid} 
+                <Tank
+                  key={tank.id}
+                  tank={tank}
+                  isCurrentPlayer={tank.id === user.uid}
                 />
               ))}
-              
+
               {/* Render projectiles */}
               {Object.values(projectiles).map(projectile => (
                 <Projectile key={projectile.id} projectile={projectile} />
               ))}
-              
+
               <div className="controls-info">
                 <p>Use WASD or Arrow Keys to move</p>
                 <p>Space to fire</p>

@@ -43,6 +43,9 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
+    // Track if we're currently processing a collision to prevent multiple collisions
+    let processingCollision = false;
+
     const render = () => {
       // Clear canvas
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -67,8 +70,8 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
         drawTank(ctx, tank, tank.id === currentPlayerId);
       });
 
-      // Draw projectile if active
-      if (gameState.projectile && gameState.projectile.active) {
+      // Draw and update projectile if active and not currently processing a collision
+      if (gameState.projectile && gameState.projectile.active && !processingCollision) {
         drawProjectile(ctx, gameState.projectile);
 
         // Update projectile position
@@ -80,11 +83,25 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
         const tankCollision = checkTankCollision(updatedProjectile, gameState.tanks, TANK_WIDTH);
 
         if (terrainCollision || tankCollision.collided) {
+          // Set flag to prevent multiple collisions
+          processingCollision = true;
+
           // Handle collision
           handleCollision(updatedProjectile, tankCollision);
+
+          // Reset flag after a short delay to ensure all collision processing is complete
+          setTimeout(() => {
+            processingCollision = false;
+          }, 1000);
         } else {
           // Update projectile if no collision
           onGameEvent('updateProjectile', updatedProjectile);
+        }
+      } else if (gameState.projectile) {
+        // Just draw the projectile without updating if we're processing a collision
+        // or if it's not active
+        if (gameState.projectile.active) {
+          drawProjectile(ctx, gameState.projectile);
         }
       }
 
@@ -109,35 +126,61 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
 
   // Handle collision with terrain or tank
   const handleCollision = (projectile, tankCollision) => {
-    // Create explosion
-    const explosionTerrain = createExplosion(terrain, projectile.x, EXPLOSION_RADIUS, 10);
+    // Log for debugging
+    console.log('Collision detected at position:', projectile.x, projectile.y);
+
+    // Create explosion with appropriate crater size based on weapon
+    const explosionPower = 15; // Increased for better visual effect
+    const explosionTerrain = createExplosion(terrain, projectile.x, EXPLOSION_RADIUS, explosionPower);
     setTerrain(explosionTerrain);
 
-    // Check for tank damage
-    if (tankCollision.collided) {
-      const hitTank = gameState.tanks[tankCollision.tankId];
-      const distance = 0; // Direct hit
-      const damage = calculateDamage(distance, EXPLOSION_RADIUS, MAX_DAMAGE);
+    // Draw explosion effect (visual only)
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
 
-      // Update tank health
-      onGameEvent('damagePlayer', { playerId: tankCollision.tankId, damage });
+      // Draw explosion circle
+      ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
+      ctx.beginPath();
+      ctx.arc(projectile.x, projectile.y, EXPLOSION_RADIUS * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw inner explosion
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.beginPath();
+      ctx.arc(projectile.x, projectile.y, EXPLOSION_RADIUS * 0.4, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Log for debugging
-    console.log('Collision detected - Ending projectile and changing turn');
-    console.log('Current game state:', gameState);
+    // Check for tank damage - now check all tanks within explosion radius
+    Object.entries(gameState.tanks || {}).forEach(([tankId, tank]) => {
+      // Calculate distance from explosion to tank center
+      const tankCenterX = tank.x + TANK_WIDTH / 2;
+      const tankCenterY = tank.y + TANK_HEIGHT / 2;
+      const dx = projectile.x - tankCenterX;
+      const dy = projectile.y - tankCenterY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Apply damage if tank is within explosion radius
+      if (distance < EXPLOSION_RADIUS * 1.2) {
+        const damage = calculateDamage(distance, EXPLOSION_RADIUS, MAX_DAMAGE);
+        if (damage > 0) {
+          console.log(`Damaging tank ${tankId} with ${damage} damage at distance ${distance}`);
+          onGameEvent('damagePlayer', { playerId: tankId, damage });
+        }
+      }
+    });
 
     // End projectile first
     onGameEvent('endProjectile');
 
-    // Add a small delay before changing turn to ensure the endProjectile event is processed
+    // Add a slightly longer delay before changing turn to ensure the explosion is visible
     setTimeout(() => {
       // Change turn
       onGameEvent('nextTurn');
 
-      // Change wind for next turn
-      setWind((Math.random() * 2 - 1) * 5);
-    }, 500);
+      // Change wind for next turn - more moderate wind values
+      setWind((Math.random() * 2 - 1) * 4);
+    }, 800);
   };
 
   // Draw a tank on the canvas

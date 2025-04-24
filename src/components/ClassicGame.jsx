@@ -26,8 +26,11 @@ function ClassicGame({ user }) {
   // Initialize game and set up listeners
   useEffect(() => {
     const gameDbRef = ref(database, `games/${gameId}`);
+    const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
+    let playersUnsubscribe;
 
-    const unsubscribe = onValue(gameDbRef, (snapshot) => {
+    // Main game data listener
+    const gameUnsubscribe = onValue(gameDbRef, (snapshot) => {
       const gameData = snapshot.val();
 
       if (!gameData) {
@@ -54,12 +57,31 @@ function ClassicGame({ user }) {
       });
     });
 
-    // Set up disconnect handler to remove player from game
-    const playerRef = ref(database, `games/${gameId}/players/${user.uid}`);
+    // Set up a separate listener for players to detect when all players have left
+    playersUnsubscribe = onValue(ref(database, `games/${gameId}/players`), (snapshot) => {
+      const playersData = snapshot.val();
+
+      // If there are no players left in the game, delete the game
+      if (!playersData || Object.keys(playersData).length === 0) {
+        console.log('No players left in game, deleting game room');
+        remove(gameDbRef);
+      }
+    });
+
+    // Set up disconnect handler to remove player from game when they disconnect
     onDisconnect(playerRef).remove();
 
+    // Clean up listeners when component unmounts
     return () => {
-      unsubscribe();
+      gameUnsubscribe();
+      if (playersUnsubscribe) playersUnsubscribe();
+
+      // Also remove the player from the game when they leave the page
+      remove(playerRef).then(() => {
+        console.log('Player removed from game on component unmount');
+      }).catch(error => {
+        console.error('Error removing player from game:', error);
+      });
     };
   }, [gameId, user.uid]);
 

@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
+import { ref, update } from 'firebase/database';
+import { database } from '../firebase';
 import { calculateInitialVelocity } from '../utils/physics';
 import '../styles/GameControls.css';
+
+// Constants
+const CANVAS_WIDTH = 800; // Match the constant in GameCanvas
 
 // Available weapons
 const WEAPONS = [
@@ -42,7 +47,7 @@ const WEAPONS = [
   }
 ];
 
-function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
+function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameId }) {
   const [angle, setAngle] = useState(45);
   const [power, setPower] = useState(50);
   const [selectedWeapon, setSelectedWeapon] = useState(WEAPONS[0]);
@@ -65,7 +70,40 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
   const handleAngleChange = (increment) => {
     setAngle(prev => {
       const newAngle = prev + increment;
-      return Math.max(0, Math.min(90, newAngle));
+      // In classic Tank Wars, angle is limited between 0 and 90 degrees
+      // For left tank (0-90), for right tank (90-180)
+
+      // Get the current tank
+      const currentTank = gameState.tanks[currentPlayerId];
+      if (!currentTank) return prev;
+
+      // Check if this is a left or right tank based on position
+      const isLeftTank = currentTank.x < CANVAS_WIDTH / 2;
+
+      // Apply appropriate angle limits
+      if (isLeftTank) {
+        // Left tank: 0 to 90 degrees (facing right)
+        const limitedAngle = Math.max(0, Math.min(90, newAngle));
+
+        // Update the tank's angle in the database to match the firing angle
+        // This will rotate the tank barrel
+        const tankRef = ref(database, `games/${gameId}/tanks/${currentPlayerId}`);
+        update(tankRef, { angle: limitedAngle });
+
+        return limitedAngle;
+      } else {
+        // Right tank: 90 to 180 degrees (facing left)
+        // Convert the input angle (0-90) to the appropriate range (180-90)
+        const actualAngle = 180 - newAngle;
+        const limitedAngle = Math.max(90, Math.min(180, actualAngle));
+
+        // Update the tank's angle in the database
+        const tankRef = ref(database, `games/${gameId}/tanks/${currentPlayerId}`);
+        update(tankRef, { angle: limitedAngle });
+
+        // Return the UI angle (0-90)
+        return Math.max(0, Math.min(90, newAngle));
+      }
     });
   };
 
@@ -99,16 +137,25 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
     const TANK_HEIGHT = 20; // Match the constant in GameCanvas
     const TANK_BARREL_LENGTH = 30; // Match the constant in GameCanvas
 
-    // Convert angle to radians
-    const radians = (currentTank.angle * Math.PI) / 180;
+    // Get the tank's angle (not the firing angle set by the player)
+    // In classic Tank Wars, the tank's barrel rotates to match the firing angle
+    const tankAngle = currentTank.angle;
+
+    // Convert tank angle to radians
+    const tankRadians = (tankAngle * Math.PI) / 180;
 
     // Calculate the center of the tank
     const tankCenterX = currentTank.x + TANK_WIDTH / 2;
     const tankCenterY = currentTank.y + TANK_HEIGHT / 2;
 
-    // Calculate the end of the barrel
-    const barrelEndX = tankCenterX + Math.cos(radians) * TANK_BARREL_LENGTH;
-    const barrelEndY = tankCenterY + Math.sin(radians) * TANK_BARREL_LENGTH;
+    // Calculate the end of the barrel using the tank's angle
+    const barrelEndX = tankCenterX + Math.cos(tankRadians) * TANK_BARREL_LENGTH;
+    const barrelEndY = tankCenterY + Math.sin(tankRadians) * TANK_BARREL_LENGTH;
+
+    // Log for debugging
+    console.log('Tank angle:', tankAngle);
+    console.log('Firing angle:', angle);
+    console.log('Barrel end position:', barrelEndX, barrelEndY);
 
     // Create projectile at the end of the barrel
     const projectile = {

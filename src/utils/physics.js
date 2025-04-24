@@ -4,9 +4,9 @@
  */
 
 // Constants
-const GRAVITY = 0.15; // Reduced gravity for better trajectory
-const WIND_FACTOR = 0.005; // Reduced wind factor for more subtle effect
-const MAX_VELOCITY = 15; // Maximum velocity to prevent extreme speeds
+const GRAVITY = 0.2; // Classic Tank Wars gravity - slightly stronger for more arc
+const WIND_FACTOR = 0.008; // Wind factor - more noticeable like in classic game
+const MAX_VELOCITY = 20; // Maximum velocity - higher to allow for more powerful shots
 
 // Calculate projectile trajectory with gravity and wind
 export function calculateProjectilePosition(projectile, wind = 0) {
@@ -32,10 +32,11 @@ export function calculateInitialVelocity(angle, power) {
   // Convert angle from degrees to radians
   const radians = (angle * Math.PI) / 180;
 
-  // Calculate velocity components with adjusted power scaling
-  // Divide by 12 instead of 10 for more controlled initial velocity
-  const velocityX = Math.cos(radians) * (power / 12);
-  const velocityY = -Math.sin(radians) * (power / 12);
+  // Calculate velocity components with classic Tank Wars scaling
+  // In classic Tank Wars, power had a more direct impact on velocity
+  // Divide by 10 for a more pronounced effect with higher power values
+  const velocityX = Math.cos(radians) * (power / 10);
+  const velocityY = -Math.sin(radians) * (power / 10);
 
   return { velocityX, velocityY };
 }

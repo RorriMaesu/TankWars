@@ -295,8 +295,11 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
       // Change turn
       onGameEvent('nextTurn');
 
-      // Change wind for next turn - more moderate wind values
-      setWind((Math.random() * 2 - 1) * 4);
+      // Change wind for next turn - classic Tank Wars had more varied wind
+      // Wind ranges from -5 to 5, with a bias toward stronger values
+      const windDirection = Math.random() > 0.5 ? 1 : -1;
+      const windStrength = Math.pow(Math.random(), 0.7) * 5; // Power function creates bias toward stronger winds
+      setWind(windDirection * windStrength);
     }, turnDelay);
   };
 
@@ -427,16 +430,43 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
     const windStrength = Math.abs(wind);
     const windDirection = wind < 0 ? 'left' : 'right';
 
+    // Classic Tank Wars had a visual wind meter
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
+    ctx.fillText('Wind', CANVAS_WIDTH / 2, 25);
 
-    let windText = 'Wind: ';
-    for (let i = 0; i < Math.ceil(windStrength); i++) {
-      windText += windDirection === 'left' ? '←' : '→';
+    // Draw wind meter background
+    const meterWidth = 100;
+    const meterHeight = 10;
+    const meterX = (CANVAS_WIDTH / 2) - (meterWidth / 2);
+    const meterY = 35;
+
+    // Draw meter background
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(meterX, meterY, meterWidth, meterHeight);
+
+    // Draw center line
+    ctx.fillStyle = '#666666';
+    ctx.fillRect(meterX + (meterWidth / 2) - 1, meterY, 2, meterHeight);
+
+    // Draw wind indicator
+    const maxWindStrength = 5; // Maximum wind strength
+    const indicatorWidth = Math.min(windStrength / maxWindStrength, 1) * (meterWidth / 2);
+
+    if (windDirection === 'right') {
+      ctx.fillStyle = '#22c55e'; // Green for right wind
+      ctx.fillRect(meterX + (meterWidth / 2), meterY, indicatorWidth, meterHeight);
+    } else {
+      ctx.fillStyle = '#ef4444'; // Red for left wind
+      ctx.fillRect(meterX + (meterWidth / 2) - indicatorWidth, meterY, indicatorWidth, meterHeight);
     }
 
-    ctx.fillText(windText, CANVAS_WIDTH / 2, 30);
+    // Draw wind value
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(windStrength.toFixed(1), CANVAS_WIDTH / 2, meterY + meterHeight + 12);
   };
 
   // Draw turn indicator

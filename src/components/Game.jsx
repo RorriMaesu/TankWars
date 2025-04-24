@@ -216,15 +216,16 @@ function Game({ user }) {
 
       // Position tanks on left or right side
       if (index % 2 === 0) {
-        // Left side - position at 1/4 of the screen width
-        x = Math.floor(200 + (Math.random() * 50));
-        // Left side tank faces right (angle between 0 and 45 degrees)
-        initialAngle = 30;
+        // Left side - position at 1/5 of the screen width
+        x = Math.floor(150 + (Math.random() * 50));
+        // Left side tank faces right (angle between 20 and 45 degrees)
+        // In classic Tank Wars, the angle is measured from horizontal
+        initialAngle = 20 + Math.floor(Math.random() * 25);
       } else {
-        // Right side - position at 3/4 of the screen width
-        x = Math.floor(550 + (Math.random() * 50));
-        // Right side tank faces left (angle between 135 and 180 degrees)
-        initialAngle = 150;
+        // Right side - position at 4/5 of the screen width
+        x = Math.floor(600 + (Math.random() * 50));
+        // Right side tank faces left (angle between 135 and 160 degrees)
+        initialAngle = 135 + Math.floor(Math.random() * 25);
       }
 
       tankPositions[playerId] = {
@@ -379,6 +380,7 @@ function Game({ user }) {
                 isCurrentTurn={isCurrentTurn}
                 gameState={gameState}
                 currentPlayerId={user.uid}
+                gameId={gameId}
               />
             </div>
           )}

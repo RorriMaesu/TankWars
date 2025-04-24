@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/copy-static.js",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "deploy": "node scripts/deploy.js",
-    "manual-deploy": "node scripts/manual-deploy.js"
+    "manual-deploy": "node scripts/manual-deploy.js",
+    "copy-static": "node scripts/copy-static.js"
   },
   "dependencies": {
     "firebase": "^10.7.0",

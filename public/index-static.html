@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Wars - Static Version</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1a1a1a;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #4CAF50;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      margin-bottom: 1.5rem;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    .button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      text-decoration: none;
+      margin: 10px;
+      display: inline-block;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .error-message {
+      color: #ff6b6b;
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ff6b6b;
+      border-radius: 4px;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tank Wars</h1>
+  <p>Welcome to Tank Wars, a classic multiplayer tank battle game!</p>
+  
+  <div class="error-message">
+    <p>We're experiencing some technical difficulties with the GitHub Pages deployment.</p>
+    <p>Please try one of the following options:</p>
+  </div>
+  
+  <div>
+    <a href="https://github.com/RorriMaesu/TankWars" class="button">View on GitHub</a>
+    <a href="https://rorrimaesu.github.io/TankWars/index.html" class="button">Try Main App</a>
+  </div>
+  
+  <script>
+    // Redirect to the main app after 5 seconds
+    setTimeout(function() {
+      window.location.href = 'https://rorrimaesu.github.io/TankWars/index.html';
+    }, 5000);
+  </script>
+</body>
+</html>

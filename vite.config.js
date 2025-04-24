@@ -12,10 +12,12 @@ export default defineConfig({
     // Disable code splitting for a single bundle
     rollupOptions: {
       output: {
-        manualChunks: undefined,
-        entryFileNames: 'assets/[name].js',
+        // Use predictable filenames without hashes
+        entryFileNames: 'assets/app.js',
         chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
+        assetFileNames: 'assets/[name].[ext]',
+        // Ensure CSS is extracted to a single file
+        manualChunks: undefined
       }
     },
     // Ensure all assets are included in the build
@@ -24,7 +26,9 @@ export default defineConfig({
     target: 'es2015',
     // Minify the output
     minify: true,
-    // Ensure sourcemaps are generated
-    sourcemap: false
+    // No sourcemaps for production
+    sourcemap: false,
+    // Ensure CSS is extracted to a file
+    cssCodeSplit: false
   }
 })

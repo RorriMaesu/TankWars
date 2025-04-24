@@ -155,9 +155,8 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId, gameI
     const TANK_HEIGHT = 20; // Match the constant in GameCanvas
     const TANK_BARREL_LENGTH = 30; // Match the constant in GameCanvas
 
-    // Get the tank's angle (not the firing angle set by the player)
-    // In classic Tank Wars, the tank's barrel rotates to match the firing angle
-    const tankAngle = currentTank.angle;
+    // We already have the tank's angle from above
+    // No need to declare it again
 
     // Convert tank angle to radians
     const tankRadians = (tankAngle * Math.PI) / 180;

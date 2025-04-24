@@ -212,14 +212,19 @@ function Game({ user }) {
     // Position tanks on opposite sides
     playerIds.forEach((playerId, index) => {
       let x;
+      let initialAngle;
 
       // Position tanks on left or right side
       if (index % 2 === 0) {
-        // Left side
-        x = 50 + (index * 20);
+        // Left side - position at 1/4 of the screen width
+        x = Math.floor(200 + (Math.random() * 50));
+        // Left side tank faces right (angle between 0 and 45 degrees)
+        initialAngle = 30;
       } else {
-        // Right side
-        x = 750 - (index * 20);
+        // Right side - position at 3/4 of the screen width
+        x = Math.floor(550 + (Math.random() * 50));
+        // Right side tank faces left (angle between 135 and 180 degrees)
+        initialAngle = 150;
       }
 
       tankPositions[playerId] = {
@@ -227,7 +232,7 @@ function Game({ user }) {
         name: players[playerId].name,
         x,
         y: 300, // Will be adjusted to terrain
-        angle: index % 2 === 0 ? 45 : 135, // Face toward center
+        angle: initialAngle, // Face toward center with some randomness
         health: 100,
         color: TANK_COLORS[index % TANK_COLORS.length],
         defeated: false

@@ -4,10 +4,42 @@ import '../styles/GameControls.css';
 
 // Available weapons
 const WEAPONS = [
-  { id: 'basic', name: 'Basic Shell', damage: 25, radius: 30 },
-  { id: 'heavy', name: 'Heavy Shell', damage: 40, radius: 35, limited: true, count: 3 },
-  { id: 'cluster', name: 'Cluster Bomb', damage: 15, radius: 20, cluster: true, limited: true, count: 2 },
-  { id: 'bunker', name: 'Bunker Buster', damage: 50, radius: 40, penetration: true, limited: true, count: 1 }
+  {
+    id: 'basic',
+    name: 'Basic Shell',
+    damage: 25,
+    radius: 30,
+    description: 'Standard shell with balanced damage and radius.'
+  },
+  {
+    id: 'heavy',
+    name: 'Heavy Shell',
+    damage: 40,
+    radius: 35,
+    limited: true,
+    count: 3,
+    description: 'Powerful shell with increased damage and explosion radius. Limited to 3 uses.'
+  },
+  {
+    id: 'cluster',
+    name: 'Cluster Bomb',
+    damage: 15,
+    radius: 20,
+    cluster: true,
+    limited: true,
+    count: 2,
+    description: 'Splits into multiple smaller explosions on impact. Great for uneven terrain. Limited to 2 uses.'
+  },
+  {
+    id: 'bunker',
+    name: 'Bunker Buster',
+    damage: 50,
+    radius: 40,
+    penetration: true,
+    limited: true,
+    count: 1,
+    description: 'Extremely powerful shell that penetrates terrain before exploding. Limited to 1 use.'
+  }
 ];
 
 function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
@@ -62,11 +94,27 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
     const currentTank = gameState.tanks[currentPlayerId];
     if (!currentTank) return;
 
-    // Create projectile
+    // Calculate projectile starting position from the end of the barrel
+    const TANK_WIDTH = 40; // Match the constant in GameCanvas
+    const TANK_HEIGHT = 20; // Match the constant in GameCanvas
+    const TANK_BARREL_LENGTH = 30; // Match the constant in GameCanvas
+
+    // Convert angle to radians
+    const radians = (currentTank.angle * Math.PI) / 180;
+
+    // Calculate the center of the tank
+    const tankCenterX = currentTank.x + TANK_WIDTH / 2;
+    const tankCenterY = currentTank.y + TANK_HEIGHT / 2;
+
+    // Calculate the end of the barrel
+    const barrelEndX = tankCenterX + Math.cos(radians) * TANK_BARREL_LENGTH;
+    const barrelEndY = tankCenterY + Math.sin(radians) * TANK_BARREL_LENGTH;
+
+    // Create projectile at the end of the barrel
     const projectile = {
       active: true,
-      x: currentTank.x + 20, // Center of tank
-      y: currentTank.y,
+      x: barrelEndX,
+      y: barrelEndY,
       velocityX,
       velocityY,
       ownerId: currentPlayerId,
@@ -107,9 +155,18 @@ function GameControls({ onFire, isCurrentTurn, gameState, currentPlayerId }) {
               disabled={weapon.limited && weapon.count === 0}
             >
               <div className="weapon-name">{weapon.name}</div>
+              <div className="weapon-description">{weapon.description}</div>
               {weapon.limited && (
-                <div className="weapon-count">{weapon.count} left</div>
+                <div className="weapon-count">
+                  {weapon.count > 0
+                    ? `${weapon.count} left`
+                    : 'Out of ammo'}
+                </div>
               )}
+              <div className="weapon-stats">
+                <span>Damage: {weapon.damage}</span>
+                <span>Radius: {weapon.radius}</span>
+              </div>
             </button>
           ))}
         </div>

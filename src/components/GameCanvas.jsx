@@ -128,27 +128,138 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
   const handleCollision = (projectile, tankCollision) => {
     // Log for debugging
     console.log('Collision detected at position:', projectile.x, projectile.y);
+    console.log('Weapon type:', projectile.weapon);
+
+    // Get weapon properties
+    let explosionRadius = EXPLOSION_RADIUS;
+    let explosionPower = 15;
+    let maxDamage = MAX_DAMAGE;
+    let createCluster = false;
+    let penetration = false;
+
+    // Adjust explosion properties based on weapon type
+    switch (projectile.weapon) {
+      case 'heavy':
+        // Heavy shell - larger explosion, more damage, deeper crater
+        explosionRadius = EXPLOSION_RADIUS * 1.2;
+        explosionPower = 25;
+        maxDamage = MAX_DAMAGE * 1.6; // 40% more damage
+        break;
+      case 'cluster':
+        // Cluster bomb - smaller initial explosion but creates secondary explosions
+        explosionRadius = EXPLOSION_RADIUS * 0.8;
+        explosionPower = 10;
+        maxDamage = MAX_DAMAGE * 0.6; // 40% less damage
+        createCluster = true;
+        break;
+      case 'bunker':
+        // Bunker buster - penetrates terrain before exploding, large damage
+        explosionRadius = EXPLOSION_RADIUS * 1.3;
+        explosionPower = 30;
+        maxDamage = MAX_DAMAGE * 2; // Double damage
+        penetration = true;
+        break;
+      default: // basic shell
+        // Standard values
+        break;
+    }
 
     // Create explosion with appropriate crater size based on weapon
-    const explosionPower = 15; // Increased for better visual effect
-    const explosionTerrain = createExplosion(terrain, projectile.x, EXPLOSION_RADIUS, explosionPower);
+    const explosionTerrain = createExplosion(
+      terrain,
+      projectile.x,
+      explosionRadius,
+      explosionPower
+    );
     setTerrain(explosionTerrain);
 
     // Draw explosion effect (visual only)
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
 
-      // Draw explosion circle
-      ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
+      // Draw explosion circle with color based on weapon type
+      let explosionColor = 'rgba(255, 165, 0, 0.7)'; // Default orange
+      let innerColor = 'rgba(255, 255, 255, 0.9)'; // Default white
+
+      switch (projectile.weapon) {
+        case 'heavy':
+          explosionColor = 'rgba(255, 0, 0, 0.7)'; // Red
+          innerColor = 'rgba(255, 255, 0, 0.9)'; // Yellow
+          break;
+        case 'cluster':
+          explosionColor = 'rgba(0, 255, 255, 0.7)'; // Cyan
+          innerColor = 'rgba(255, 255, 255, 0.9)'; // White
+          break;
+        case 'bunker':
+          explosionColor = 'rgba(128, 0, 128, 0.7)'; // Purple
+          innerColor = 'rgba(255, 0, 255, 0.9)'; // Magenta
+          break;
+      }
+
+      // Draw main explosion
+      ctx.fillStyle = explosionColor;
       ctx.beginPath();
-      ctx.arc(projectile.x, projectile.y, EXPLOSION_RADIUS * 0.8, 0, Math.PI * 2);
+      ctx.arc(projectile.x, projectile.y, explosionRadius * 0.8, 0, Math.PI * 2);
       ctx.fill();
 
       // Draw inner explosion
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillStyle = innerColor;
       ctx.beginPath();
-      ctx.arc(projectile.x, projectile.y, EXPLOSION_RADIUS * 0.4, 0, Math.PI * 2);
+      ctx.arc(projectile.x, projectile.y, explosionRadius * 0.4, 0, Math.PI * 2);
       ctx.fill();
+
+      // For cluster bombs, create additional smaller explosions
+      if (createCluster) {
+        // Create 3-5 smaller explosions around the main one
+        const clusterCount = 3 + Math.floor(Math.random() * 3);
+        const clusterRadius = explosionRadius * 0.5;
+
+        for (let i = 0; i < clusterCount; i++) {
+          // Random position around the main explosion
+          const angle = Math.random() * Math.PI * 2;
+          const distance = explosionRadius * (0.8 + Math.random() * 0.8);
+          const clusterX = projectile.x + Math.cos(angle) * distance;
+          const clusterY = projectile.y + Math.sin(angle) * distance;
+
+          // Draw cluster explosion
+          ctx.fillStyle = 'rgba(0, 200, 255, 0.6)';
+          ctx.beginPath();
+          ctx.arc(clusterX, clusterY, clusterRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Draw inner cluster explosion
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.beginPath();
+          ctx.arc(clusterX, clusterY, clusterRadius * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Create smaller crater for each cluster
+          const clusterTerrain = createExplosion(
+            explosionTerrain,
+            clusterX,
+            clusterRadius,
+            explosionPower * 0.6
+          );
+          setTerrain(clusterTerrain);
+
+          // Apply damage from cluster explosions
+          Object.entries(gameState.tanks || {}).forEach(([tankId, tank]) => {
+            const tankCenterX = tank.x + TANK_WIDTH / 2;
+            const tankCenterY = tank.y + TANK_HEIGHT / 2;
+            const dx = clusterX - tankCenterX;
+            const dy = clusterY - tankCenterY;
+            const clusterDistance = Math.sqrt(dx * dx + dy * dy);
+
+            if (clusterDistance < clusterRadius * 1.2) {
+              const clusterDamage = calculateDamage(clusterDistance, clusterRadius, maxDamage * 0.4);
+              if (clusterDamage > 0) {
+                console.log(`Cluster damaging tank ${tankId} with ${clusterDamage} damage`);
+                onGameEvent('damagePlayer', { playerId: tankId, damage: clusterDamage });
+              }
+            }
+          });
+        }
+      }
     }
 
     // Check for tank damage - now check all tanks within explosion radius
@@ -161,8 +272,11 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Apply damage if tank is within explosion radius
-      if (distance < EXPLOSION_RADIUS * 1.2) {
-        const damage = calculateDamage(distance, EXPLOSION_RADIUS, MAX_DAMAGE);
+      // Bunker buster has a larger damage radius
+      const damageRadius = penetration ? explosionRadius * 1.5 : explosionRadius * 1.2;
+
+      if (distance < damageRadius) {
+        const damage = calculateDamage(distance, explosionRadius, maxDamage);
         if (damage > 0) {
           console.log(`Damaging tank ${tankId} with ${damage} damage at distance ${distance}`);
           onGameEvent('damagePlayer', { playerId: tankId, damage });
@@ -174,13 +288,16 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
     onGameEvent('endProjectile');
 
     // Add a slightly longer delay before changing turn to ensure the explosion is visible
+    // Longer delay for cluster bombs to allow all explosions to be seen
+    const turnDelay = createCluster ? 1200 : 800;
+
     setTimeout(() => {
       // Change turn
       onGameEvent('nextTurn');
 
       // Change wind for next turn - more moderate wind values
       setWind((Math.random() * 2 - 1) * 4);
-    }, 800);
+    }, turnDelay);
   };
 
   // Draw a tank on the canvas
@@ -229,21 +346,80 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
 
   // Draw a projectile on the canvas
   const drawProjectile = (ctx, projectile) => {
-    ctx.fillStyle = '#f97316';
+    // Different colors and sizes for different weapon types
+    let projectileColor = '#f97316'; // Default orange
+    let trailColor = 'rgba(249, 115, 22, 0.5)'; // Default orange trail
+    let projectileSize = PROJECTILE_RADIUS;
+    let trailLength = 3;
+
+    // Customize projectile appearance based on weapon type
+    switch (projectile.weapon) {
+      case 'heavy':
+        // Heavy shell - larger, red projectile with longer trail
+        projectileColor = '#ef4444'; // Red
+        trailColor = 'rgba(239, 68, 68, 0.6)';
+        projectileSize = PROJECTILE_RADIUS * 1.5;
+        trailLength = 4;
+        break;
+      case 'cluster':
+        // Cluster bomb - cyan projectile with sparkles
+        projectileColor = '#06b6d4'; // Cyan
+        trailColor = 'rgba(6, 182, 212, 0.6)';
+        projectileSize = PROJECTILE_RADIUS * 1.2;
+        trailLength = 3.5;
+        break;
+      case 'bunker':
+        // Bunker buster - purple projectile with intense trail
+        projectileColor = '#a855f7'; // Purple
+        trailColor = 'rgba(168, 85, 247, 0.7)';
+        projectileSize = PROJECTILE_RADIUS * 1.3;
+        trailLength = 5;
+        break;
+    }
+
+    // Draw the projectile
+    ctx.fillStyle = projectileColor;
     ctx.beginPath();
-    ctx.arc(projectile.x, projectile.y, PROJECTILE_RADIUS, 0, Math.PI * 2);
+    ctx.arc(projectile.x, projectile.y, projectileSize, 0, Math.PI * 2);
     ctx.fill();
 
     // Draw trail
-    ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = trailColor;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(projectile.x, projectile.y);
     ctx.lineTo(
-      projectile.x - projectile.velocityX * 3,
-      projectile.y - projectile.velocityY * 3
+      projectile.x - projectile.velocityX * trailLength,
+      projectile.y - projectile.velocityY * trailLength
     );
     ctx.stroke();
+
+    // Add special effects for certain weapons
+    if (projectile.weapon === 'cluster') {
+      // Add sparkle effect for cluster bombs
+      for (let i = 0; i < 3; i++) {
+        const sparkleX = projectile.x - (Math.random() * 5 - 2.5);
+        const sparkleY = projectile.y - (Math.random() * 5 - 2.5);
+        const sparkleSize = Math.random() * 2 + 1;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(sparkleX, sparkleY, sparkleSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (projectile.weapon === 'bunker') {
+      // Add smoke trail for bunker busters
+      for (let i = 1; i <= 3; i++) {
+        const smokeX = projectile.x - projectile.velocityX * (i * 1.2);
+        const smokeY = projectile.y - projectile.velocityY * (i * 1.2);
+        const smokeSize = projectileSize * (0.8 - i * 0.15);
+
+        ctx.fillStyle = `rgba(100, 100, 100, ${0.4 - i * 0.1})`;
+        ctx.beginPath();
+        ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   };
 
   // Draw wind indicator

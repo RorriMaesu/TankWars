@@ -166,7 +166,7 @@
 
 .weapon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -178,6 +178,9 @@
   border-radius: 4px;
   cursor: pointer;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .weapon-item:hover {
@@ -197,11 +200,35 @@
 .weapon-name {
   font-weight: bold;
   margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: #f8fafc;
+}
+
+.weapon-description {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+  flex-grow: 1;
 }
 
 .weapon-count {
+  font-size: 0.9rem;
+  color: #f59e0b;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.weapon-stats {
+  display: flex;
+  justify-content: space-between;
   font-size: 0.8rem;
   color: #9ca3af;
+  border-top: 1px solid #4b5563;
+  padding-top: 0.5rem;
+}
+
+.weapon-item:disabled .weapon-count {
+  color: #ef4444;
 }
 
 .close-menu {

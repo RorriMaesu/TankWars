@@ -224,10 +224,32 @@ function GameCanvas({ gameState, onGameEvent, currentPlayerId }) {
   const drawTurnIndicator = (ctx, currentTurn) => {
     if (!currentTurn) return;
 
+    // Get player name from tanks if available
+    let playerName = currentTurn;
+    if (gameState.tanks && gameState.tanks[currentTurn]) {
+      playerName = gameState.tanks[currentTurn].name;
+    }
+
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`${currentTurn}'s Turn`, CANVAS_WIDTH / 2, 60);
+    ctx.fillText(`${playerName}'s Turn`, CANVAS_WIDTH / 2, 60);
+
+    // Draw a more visible turn indicator
+    if (gameState.tanks && gameState.tanks[currentTurn]) {
+      const tank = gameState.tanks[currentTurn];
+      const x = tank.x + TANK_WIDTH / 2;
+      const terrainY = getTerrainHeightAtPosition(terrain, x);
+
+      // Draw arrow pointing to current player's tank
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.moveTo(x, terrainY - TANK_HEIGHT - 30);
+      ctx.lineTo(x - 10, terrainY - TANK_HEIGHT - 15);
+      ctx.lineTo(x + 10, terrainY - TANK_HEIGHT - 15);
+      ctx.closePath();
+      ctx.fill();
+    }
   };
 
   // Helper function to get terrain height at a specific position

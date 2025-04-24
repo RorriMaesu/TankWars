@@ -83,10 +83,22 @@ function ClassicGame({ user }) {
         break;
 
       case 'endProjectile':
-        // End projectile animation
-        update(gameRef, {
-          'projectile.active': false
-        });
+        // End projectile animation by updating the entire projectile object
+        // Get the current projectile
+        const currentProjectile = { ...gameState.projectile };
+        if (currentProjectile) {
+          // Set active to false
+          currentProjectile.active = false;
+
+          // Update the entire projectile object
+          update(gameRef, {
+            projectile: currentProjectile
+          });
+
+          console.log('Ending projectile - Updated projectile:', currentProjectile);
+        } else {
+          console.warn('Cannot end projectile - No active projectile found');
+        }
         break;
 
       case 'damagePlayer':

@@ -75,8 +75,36 @@ if (!fs.existsSync(path.join(distDir, 'manifest.json'))) {
   );
 }
 
+// Verify that all critical files exist
+const criticalFiles = ['index.html', 'assets/index.js', 'manifest.json', '.nojekyll'];
+let allFilesExist = true;
+
+criticalFiles.forEach(file => {
+  const filePath = path.join(distDir, file);
+  if (!fs.existsSync(filePath)) {
+    console.error(`❌ Critical file missing: ${file}`);
+    allFilesExist = false;
+
+    // For assets directory, create it if it doesn't exist
+    if (file.startsWith('assets/')) {
+      const assetsDir = path.join(distDir, 'assets');
+      if (!fs.existsSync(assetsDir)) {
+        fs.mkdirSync(assetsDir, { recursive: true });
+        console.log('Created assets directory');
+      }
+    }
+  } else {
+    console.log(`✓ Found critical file: ${file}`);
+  }
+});
+
+if (!allFilesExist) {
+  console.warn('⚠️ Some critical files are missing. Deployment may not work correctly.');
+}
+
 // Deploy to GitHub Pages
 console.log('Deploying to GitHub Pages...');
 execSync('npx gh-pages -d dist --no-history', { stdio: 'inherit' });
 
 console.log('✅ Deployment complete!');
+console.log('🔍 Please check https://rorrimaesu.github.io/TankWars/ to verify the deployment.');

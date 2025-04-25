@@ -5,12 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+<<<<<<< HEAD
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "deploy": "gh-pages -d dist",
     "deploy:script": "node scripts/deploy.js",
     "predeploy": "npm run build && node scripts/copy-public-files.js"
+=======
+    "build": "vite build && node scripts/copy-public-files.js",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "deploy": "npm run build && npx gh-pages -d dist",
+    "manual-deploy": "node scripts/manual-deploy.js",
+    "copy-static": "node scripts/copy-static.js"
+>>>>>>> 2bb5d34 (Fix GitHub Pages deployment: update build process and prevent overriding index.html)
   },
   "dependencies": {
     "firebase": "^10.7.0",
